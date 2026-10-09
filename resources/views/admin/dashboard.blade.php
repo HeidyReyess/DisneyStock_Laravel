@@ -120,7 +120,9 @@
     <div class="card">
         <div class="card-header">
             <span class="card-title"><i class="fas fa-receipt" style="color:#7C3AED;margin-right:8px;"></i>Ventas recientes</span>
-            <a href="#" style="font-size:.8rem;color:#7C3AED;text-decoration:none;font-weight:600;">Ver todas →</a>
+            <a href="{{ Route::has('ventas.index') ? route('ventas.index') : '#' }}"
+               onclick="{{ Route::has('ventas.index') ? 'return true' : 'proximamente(); return false' }}"
+               style="font-size:.8rem;color:#7C3AED;text-decoration:none;font-weight:600;">Ver todas →</a>
         </div>
         <div class="card-body" style="padding:0 0 4px;">
             <div class="empty-state">
@@ -134,7 +136,9 @@
     <div class="card">
         <div class="card-header">
             <span class="card-title"><i class="fas fa-bell" style="color:#7C3AED;margin-right:8px;"></i>Alertas de stock</span>
-            <a href="#" style="font-size:.8rem;color:#7C3AED;text-decoration:none;font-weight:600;">Ver inventario →</a>
+            <a href="{{ Route::has('inventario.index') ? route('inventario.index') : '#' }}"
+               onclick="{{ Route::has('inventario.index') ? 'return true' : 'proximamente(); return false' }}"
+               style="font-size:.8rem;color:#7C3AED;text-decoration:none;font-weight:600;">Ver inventario →</a>
         </div>
         <div class="card-body">
             <div class="empty-state">
@@ -169,19 +173,27 @@
         </div>
         <div class="card-body">
             <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
-                <a href="#" style="display:flex;flex-direction:column;align-items:center;gap:8px;padding:16px 12px;background:#F5F3FF;border-radius:12px;text-decoration:none;transition:background .2s;" onmouseover="this.style.background='#EDE9FE'" onmouseout="this.style.background='#F5F3FF'">
+                <a href="{{ Route::has('ventas.create') ? route('ventas.create') : '#' }}"
+                   onclick="{{ Route::has('ventas.create') ? 'return true' : 'proximamente(); return false' }}"
+                   style="display:flex;flex-direction:column;align-items:center;gap:8px;padding:16px 12px;background:#F5F3FF;border-radius:12px;text-decoration:none;transition:background .2s;" onmouseover="this.style.background='#EDE9FE'" onmouseout="this.style.background='#F5F3FF'">
                     <i class="fas fa-plus-circle" style="font-size:1.4rem;color:#7C3AED;"></i>
                     <span style="font-size:.8rem;font-weight:600;color:#1E1B4B;">Nueva venta</span>
                 </a>
-                <a href="#" style="display:flex;flex-direction:column;align-items:center;gap:8px;padding:16px 12px;background:#F5F3FF;border-radius:12px;text-decoration:none;transition:background .2s;" onmouseover="this.style.background='#EDE9FE'" onmouseout="this.style.background='#F5F3FF'">
+                <a href="{{ Route::has('productos.create') ? route('productos.create') : '#' }}"
+                   onclick="{{ Route::has('productos.create') ? 'return true' : 'proximamente(); return false' }}"
+                   style="display:flex;flex-direction:column;align-items:center;gap:8px;padding:16px 12px;background:#F5F3FF;border-radius:12px;text-decoration:none;transition:background .2s;" onmouseover="this.style.background='#EDE9FE'" onmouseout="this.style.background='#F5F3FF'">
                     <i class="fas fa-box-open" style="font-size:1.4rem;color:#7C3AED;"></i>
                     <span style="font-size:.8rem;font-weight:600;color:#1E1B4B;">Nuevo producto</span>
                 </a>
-                <a href="#" style="display:flex;flex-direction:column;align-items:center;gap:8px;padding:16px 12px;background:#F5F3FF;border-radius:12px;text-decoration:none;transition:background .2s;" onmouseover="this.style.background='#EDE9FE'" onmouseout="this.style.background='#F5F3FF'">
-                    <i class="fas fa-arrow-up-to-line" style="font-size:1.4rem;color:#7C3AED;"></i>
+                <a href="{{ Route::has('inventario.index') ? route('inventario.index') : '#' }}"
+                   onclick="{{ Route::has('inventario.index') ? 'return true' : 'proximamente(); return false' }}"
+                   style="display:flex;flex-direction:column;align-items:center;gap:8px;padding:16px 12px;background:#F5F3FF;border-radius:12px;text-decoration:none;transition:background .2s;" onmouseover="this.style.background='#EDE9FE'" onmouseout="this.style.background='#F5F3FF'">
+                    <i class="fas fa-truck-ramp-box" style="font-size:1.4rem;color:#7C3AED;"></i>
                     <span style="font-size:.8rem;font-weight:600;color:#1E1B4B;">Entrada de stock</span>
                 </a>
-                <a href="#" style="display:flex;flex-direction:column;align-items:center;gap:8px;padding:16px 12px;background:#F5F3FF;border-radius:12px;text-decoration:none;transition:background .2s;" onmouseover="this.style.background='#EDE9FE'" onmouseout="this.style.background='#F5F3FF'">
+                <a href="{{ Route::has('reportes.index') ? route('reportes.index') : '#' }}"
+                   onclick="{{ Route::has('reportes.index') ? 'return true' : 'proximamente(); return false' }}"
+                   style="display:flex;flex-direction:column;align-items:center;gap:8px;padding:16px 12px;background:#F5F3FF;border-radius:12px;text-decoration:none;transition:background .2s;" onmouseover="this.style.background='#EDE9FE'" onmouseout="this.style.background='#F5F3FF'">
                     <i class="fas fa-chart-bar" style="font-size:1.4rem;color:#7C3AED;"></i>
                     <span style="font-size:.8rem;font-weight:600;color:#1E1B4B;">Ver reportes</span>
                 </a>

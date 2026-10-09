@@ -101,12 +101,11 @@
         .topbar {
             position: sticky; top: 0; z-index: 40;
             height: var(--header-h);
-            background: rgba(255,255,255,.92);
-            backdrop-filter: blur(12px);
+            background: #ffffff;
             border-bottom: 1px solid #EDE9FE;
             display: flex; align-items: center; justify-content: space-between;
             padding: 0 28px;
-            box-shadow: 0 1px 8px rgba(74,29,150,.07);
+            box-shadow: 0 1px 6px rgba(74,29,150,.08);
         }
         .topbar-title { font-family: 'Outfit', sans-serif; font-size: 1.25rem; font-weight: 700; color: #1E1B4B; }
         .topbar-right { display: flex; align-items: center; gap: 14px; }
@@ -162,28 +161,40 @@
 
         <div class="sidebar-section">Inventario</div>
 
-        <a href="#" class="sidebar-link {{ request()->routeIs('productos.*') ? 'active' : '' }}">
+        <a href="{{ Route::has('productos.index') ? route('productos.index') : '#' }}"
+           onclick="{{ Route::has('productos.index') ? 'return true' : 'proximamente(); return false' }}"
+           class="sidebar-link {{ request()->routeIs('productos.*') ? 'active' : '' }}">
             <i class="fas fa-box"></i> Productos
         </a>
-        <a href="#" class="sidebar-link {{ request()->routeIs('inventario.*') ? 'active' : '' }}">
+        <a href="{{ Route::has('inventario.index') ? route('inventario.index') : '#' }}"
+           onclick="{{ Route::has('inventario.index') ? 'return true' : 'proximamente(); return false' }}"
+           class="sidebar-link {{ request()->routeIs('inventario.*') ? 'active' : '' }}">
             <i class="fas fa-warehouse"></i> Inventario
         </a>
-        <a href="#" class="sidebar-link {{ request()->routeIs('categorias.*') ? 'active' : '' }}">
+        <a href="{{ Route::has('categorias.index') ? route('categorias.index') : '#' }}"
+           onclick="{{ Route::has('categorias.index') ? 'return true' : 'proximamente(); return false' }}"
+           class="sidebar-link {{ request()->routeIs('categorias.*') ? 'active' : '' }}">
             <i class="fas fa-tags"></i> Categorías
         </a>
 
         <div class="sidebar-section">Ventas</div>
 
-        <a href="#" class="sidebar-link {{ request()->routeIs('ventas.*') ? 'active' : '' }}">
+        <a href="{{ Route::has('ventas.index') ? route('ventas.index') : '#' }}"
+           onclick="{{ Route::has('ventas.index') ? 'return true' : 'proximamente(); return false' }}"
+           class="sidebar-link {{ request()->routeIs('ventas.*') ? 'active' : '' }}">
             <i class="fas fa-cash-register"></i> Ventas
         </a>
-        <a href="#" class="sidebar-link {{ request()->routeIs('reportes.*') ? 'active' : '' }}">
+        <a href="{{ Route::has('reportes.index') ? route('reportes.index') : '#' }}"
+           onclick="{{ Route::has('reportes.index') ? 'return true' : 'proximamente(); return false' }}"
+           class="sidebar-link {{ request()->routeIs('reportes.*') ? 'active' : '' }}">
             <i class="fas fa-chart-bar"></i> Reportes
         </a>
 
         @if(Auth::user()->esAdmin())
         <div class="sidebar-section">Administración</div>
-        <a href="#" class="sidebar-link {{ request()->routeIs('usuarios.*') ? 'active' : '' }}">
+        <a href="{{ Route::has('usuarios.index') ? route('usuarios.index') : '#' }}"
+           onclick="{{ Route::has('usuarios.index') ? 'return true' : 'proximamente(); return false' }}"
+           class="sidebar-link {{ request()->routeIs('usuarios.*') ? 'active' : '' }}">
             <i class="fas fa-users-cog"></i> Usuarios
         </a>
         @endif
@@ -256,6 +267,33 @@
     </main>
 
 </div>
+
+{{-- Modal: próximamente --}}
+<div id="modalProximamente" style="display:none; position:fixed; inset:0; z-index:2000; align-items:center; justify-content:center; padding:24px;">
+    <div style="position:absolute; inset:0; background:rgba(30,7,71,.45);" onclick="this.parentElement.style.display='none'"></div>
+    <div style="position:relative; background:#fff; border-radius:16px; max-width:360px; width:100%; padding:32px 28px; box-shadow:0 16px 48px rgba(74,29,150,.18); text-align:center;">
+        <div style="width:48px; height:48px; border-radius:14px; background:#EDE9FE; display:flex; align-items:center; justify-content:center; font-size:1.3rem; color:#7C3AED; margin:0 auto 16px;">
+            <i class="fas fa-clock"></i>
+        </div>
+        <h3 style="font-family:'Outfit',sans-serif; font-size:1.1rem; font-weight:800; color:#1E1B4B; margin-bottom:8px;">Módulo en desarrollo</h3>
+        <p style="font-size:.88rem; color:#6B7280; line-height:1.65; margin-bottom:22px;">Este módulo estará disponible pronto.</p>
+        <button onclick="document.getElementById('modalProximamente').style.display='none'"
+            style="padding:10px 28px; background:#4A1D96; color:#fff; border:2px solid #4A1D96; border-radius:10px; font-family:'Outfit',sans-serif; font-size:.92rem; font-weight:700; cursor:pointer;"
+            onmouseover="this.style.background='#7C3AED';this.style.borderColor='#7C3AED'"
+            onmouseout="this.style.background='#4A1D96';this.style.borderColor='#4A1D96'">
+            Entendido
+        </button>
+    </div>
+</div>
+
+<script>
+function proximamente() {
+    document.getElementById('modalProximamente').style.display = 'flex';
+}
+document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape') document.getElementById('modalProximamente').style.display = 'none';
+});
+</script>
 
 </body>
 </html>
