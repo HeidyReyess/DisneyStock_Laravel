@@ -33,10 +33,12 @@ class DashboardController extends Controller
             ->where('estado', '!=', 'anulada')
             ->sum('total');
 
-        // Productos con stock bajo o igual al mínimo
+        // Productos con stock bajo o igual al mínimo (solo activos)
         $stockBajo = DB::table('inventarios')
-            ->whereColumn('cantidad_stock', '<=', 'stock_minimo')
-            ->where('stock_minimo', '>', 0)
+            ->join('productos', 'productos.id', '=', 'inventarios.producto_id')
+            ->whereColumn('inventarios.cantidad_stock', '<=', 'inventarios.stock_minimo')
+            ->where('inventarios.stock_minimo', '>', 0)
+            ->where('productos.estado', 'activo')
             ->count();
 
         return view('admin.dashboard', compact(

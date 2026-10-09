@@ -118,9 +118,12 @@
         }
         .topbar-badge:hover { background: #EDE9FE; }
         .badge-dot {
-            position: absolute; top: 7px; right: 7px;
-            width: 8px; height: 8px; border-radius: 50%;
+            position: absolute; top: 4px; right: 4px;
+            min-width: 16px; height: 16px; border-radius: 8px;
             background: #EF4444; border: 2px solid #fff;
+            font-size: .6rem; font-weight: 700; color: #fff;
+            display: flex; align-items: center; justify-content: center;
+            padding: 0 3px; line-height: 1;
         }
         .page-content { flex: 1; padding: 28px; }
 
@@ -220,7 +223,9 @@
             {{-- Campana de alertas --}}
             <div class="topbar-badge">
                 <i class="fas fa-bell text-sm"></i>
-                <span class="badge-dot"></span>
+                @if($alertasStock > 0)
+                    <span class="badge-dot">{{ $alertasStock > 9 ? '9+' : $alertasStock }}</span>
+                @endif
             </div>
             {{-- Avatar --}}
             <div class="topbar-badge" style="background:#EDE9FE; color:#4A1D96; font-weight:700; font-size:.85rem;">
