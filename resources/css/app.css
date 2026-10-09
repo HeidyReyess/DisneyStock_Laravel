@@ -4,6 +4,28 @@
 @source '../../storage/framework/views/*.php';
 
 @theme {
-    --font-sans: 'Instrument Sans', ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji',
-        'Segoe UI Symbol', 'Noto Color Emoji';
+    /* Tipografía */
+    --font-sans: 'Inter', ui-sans-serif, system-ui, sans-serif;
+    --font-display: 'Outfit', ui-sans-serif, system-ui, sans-serif;
+
+    /* Paleta DisneyStock — morado/violeta */
+    --color-disney-900:  #2D0A6E;
+    --color-disney-800:  #3B0D8F;
+    --color-disney-700:  #4A1D96;
+    --color-disney-600:  #5B21B6;
+    --color-disney-500:  #7C3AED;
+    --color-disney-400:  #8B5CF6;
+    --color-disney-300:  #A78BFA;
+    --color-disney-200:  #C4B5FD;
+    --color-disney-100:  #EDE9FE;
+    --color-disney-50:   #F5F3FF;
+
+    /* Acento dorado */
+    --color-accent-600:  #D97706;
+    --color-accent-500:  #F59E0B;
+    --color-accent-100:  #FEF3C7;
+
+    /* Sidebar */
+    --color-sidebar:     #1E0747;
+    --color-sidebar-hover: #2D0A6E;
 }

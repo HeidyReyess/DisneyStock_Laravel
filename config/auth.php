@@ -63,8 +63,9 @@ return [
 
     'providers' => [
         'users' => [
-            'driver' => 'eloquent',
-            'model' => env('AUTH_MODEL', User::class),
+            'driver'   => 'eloquent',
+            'model'    => env('AUTH_MODEL', User::class),
+            'username' => 'usuario',   // campo de login personalizado
         ],
 
         // 'users' => [
