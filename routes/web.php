@@ -5,6 +5,8 @@ use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\CategoriaController;
 use App\Http\Controllers\ProductoController;
 
+use App\Http\Controllers\InventarioController;
+
 // ── Pública ───────────────────────────────────────────────
 Route::get('/', fn() => view('welcome'))->name('home');
 
@@ -25,7 +27,11 @@ Route::middleware(['auth', 'no-cache'])->group(function () {
     Route::patch('productos/{producto}/toggle', [ProductoController::class, 'toggle'])
         ->name('productos.toggle');
 
-    // Aquí irán: inventario, ventas, reportes …
+    // Inventario — admin y empleado pueden ver; solo admin registra movimientos
+    Route::get('/inventario', [InventarioController::class, 'index'])->name('inventario.index');
+    Route::post('/inventario/movimiento', [InventarioController::class, 'movimiento'])->name('inventario.movimiento');
+
+    // Aquí irán: ventas, reportes …
 
 });
 
