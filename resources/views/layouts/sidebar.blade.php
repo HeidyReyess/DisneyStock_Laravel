@@ -200,7 +200,7 @@
         @endif
     </nav>
 
-    {{-- Footer usuario --}}
+    {{-- Footer usuario (solo info, sin logout) --}}
     <div class="sidebar-footer">
         <div class="sidebar-user">
             <div class="sidebar-user-avatar">
@@ -211,13 +211,6 @@
                 <div class="sidebar-user-role">{{ Auth::user()->rol->nombre ?? 'usuario' }}</div>
             </div>
         </div>
-
-        <form method="POST" action="{{ route('logout') }}">
-            @csrf
-            <button type="submit" class="btn-logout">
-                <i class="fas fa-right-from-bracket"></i> Cerrar sesión
-            </button>
-        </form>
     </div>
 
 </aside>
@@ -242,6 +235,14 @@
             <div class="topbar-badge" style="background:#EDE9FE; color:#4A1D96; font-weight:700; font-size:.85rem;">
                 {{ strtoupper(substr(Auth::user()->nombre, 0, 1)) }}
             </div>
+            {{-- Cerrar sesión --}}
+            <form method="POST" action="{{ route('logout') }}" style="margin:0;">
+                @csrf
+                <button type="submit" class="topbar-badge" title="Cerrar sesión"
+                    style="background:#FEE2E2; color:#DC2626; border:none; cursor:pointer;">
+                    <i class="fas fa-right-from-bracket" style="font-size:.9rem;"></i>
+                </button>
+            </form>
         </div>
     </header>
 
