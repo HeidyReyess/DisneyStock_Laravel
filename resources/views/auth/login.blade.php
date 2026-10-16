@@ -46,11 +46,11 @@
         }
         .login-left-content {
             position: relative; z-index: 1;
-            text-align: center; color: #fff;
+            text-align: left; color: #fff;
         }
         .login-left-content img { height: 90px; width: auto; object-fit: contain; margin-bottom: 24px; filter: brightness(0) invert(1); }
         .login-left-content h1 { font-family: 'Outfit', sans-serif; font-size: 2.2rem; font-weight: 900; margin-bottom: 12px; letter-spacing: -.5px; }
-        .login-left-content p { font-size: .95rem; color: rgba(255,255,255,.7); line-height: 1.7; max-width: 340px; margin: 0 auto 36px; }
+        .login-left-content p { font-size: .95rem; color: rgba(255,255,255,.7); line-height: 1.7; max-width: 340px; margin: 0 0 36px; }
         .feature-list { list-style: none; text-align: left; }
         .feature-list li {
             display: flex; align-items: center; gap: 12px;
@@ -235,7 +235,7 @@
             <label class="checkbox-wrap">
                 <input type="checkbox" name="remember"> Recordarme
             </label>
-            <a href="#" class="forgot-link" onclick="document.getElementById('modalOlvidaste').style.display='flex'; return false;">¿Olvidaste tu contraseña?</a>
+            <a href="javascript:void(0)" class="forgot-link" onclick="document.getElementById('modalOlvidaste').style.display='flex';">¿Olvidaste tu contraseña?</a>
         </div>
 
         <button type="submit" class="btn-login">
@@ -260,7 +260,7 @@
         </div>
         <h3 style="font-family:'Outfit',sans-serif; font-size:1.2rem; font-weight:800; color:#1E1B4B; margin-bottom:10px;">¿Olvidaste tu contraseña?</h3>
         <p style="font-size:.9rem; color:#6B7280; line-height:1.7; margin-bottom:24px;">
-            Comunícate con el administrador para restablecer tu contraseña.
+            Comunícate con la administradora del sistema para que restablezca tu contraseña.
         </p>
         <button onclick="this.closest('#modalOlvidaste').style.display='none'" style="width:100%; padding:11px; background:#4A1D96; color:#fff; border:2px solid #4A1D96; border-radius:12px; font-family:'Outfit',sans-serif; font-size:.95rem; font-weight:700; cursor:pointer; transition:background .2s;" onmouseover="this.style.background='#7C3AED';this.style.borderColor='#7C3AED'" onmouseout="this.style.background='#4A1D96';this.style.borderColor='#4A1D96'">
             Entendido

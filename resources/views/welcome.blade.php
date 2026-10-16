@@ -42,8 +42,20 @@
             transition: box-shadow .3s ease;
         }
         .navbar.scrolled { box-shadow: 0 2px 14px rgba(74,29,150,.13); }
-        .navbar-inner { display:flex; align-items:center; justify-content:space-between; height:var(--navbar-h); font-size:0; }
-        .navbar-inner > * { font-size:1rem; }
+        /* Logo: flex directo, gap:10px, sin interferencia de font-size:0 */
+        .navbar-inner {
+            display:flex; align-items:center; justify-content:space-between;
+            height:var(--navbar-h);
+        }
+        .navbar-logo {
+            display:flex; align-items:center; gap:10px;
+            text-decoration:none; flex-shrink:0;
+        }
+        .navbar-logo img  { height:44px; width:auto; display:block; }
+        .navbar-logo span {
+            font-family:'Outfit',sans-serif; font-size:1.55rem; font-weight:800;
+            color:#4A1D96; letter-spacing:-.5px; line-height:1; white-space:nowrap;
+        }
         .nav-links { display:flex; align-items:center; gap:8px; list-style:none; }
         .nav-link { padding:8px 14px; color:var(--text-muted); text-decoration:none; font-size:.92rem; font-weight:500; border-radius:8px; transition:all .2s ease; }
         .nav-link:hover { color:var(--primary); background:var(--primary-ultra); }
@@ -55,37 +67,90 @@
         }
         .nav-btn-ingresar:hover { background:var(--primary-light); transform:translateY(-1px); box-shadow:0 6px 20px rgba(74,29,150,.4); }
 
-        /* ── Carrusel ── */
-        #inicio { position:relative; height:100vh; overflow:hidden; margin-top:0; }
+        /* ── Carrusel — [6] altura 85vh escritorio ── */
+        #inicio { position:relative; height:85vh; min-height:520px; overflow:hidden; margin-top:0; }
         .slide { position:absolute; inset:0; opacity:0; transition:opacity .8s ease; }
         .slide.active { opacity:1; z-index:1; }
+
+        /* [2] Slide 1 local: blur + brightness reducido para zonas lavadas */
         .slide-bg { width:100%; height:100%; object-fit:cover; }
-        .slide::after { content:''; position:absolute; inset:0; background:rgba(44,10,100,.70); }
+        .slide.slide-local .slide-bg { filter:blur(2px) brightness(.85); transform:scale(1.04); }
+
+        /* [2] Overlay uniforme en los 4 slides: degradado morado oscuro, más fuerte abajo */
+        .slide::after {
+            content:''; position:absolute; inset:0;
+            background: linear-gradient(
+                to top,
+                rgba(42,22,80,.78)  0%,
+                rgba(42,22,80,.60) 50%,
+                rgba(42,22,80,.45) 100%
+            );
+        }
+
         .slide-content {
             position:absolute; inset:0; z-index:2;
             display:flex; flex-direction:column; align-items:center; justify-content:center;
             text-align:center; padding:0 24px; padding-top:var(--navbar-h);
         }
-        .slide-content h1 { font-family:'Outfit',sans-serif; font-size:clamp(2rem,5vw,3.5rem); font-weight:900; color:#fff; margin-bottom:16px; line-height:1.15; }
-        .slide-content p { font-size:clamp(.95rem,2vw,1.15rem); color:rgba(255,255,255,.85); max-width:620px; margin-bottom:32px; line-height:1.7; }
+        /* [8] Fuentes y sombra doble para legibilidad en cualquier fondo */
+        .slide-content h1 {
+            font-family:'Outfit',sans-serif; font-size:clamp(1.8rem,5vw,3.5rem);
+            font-weight:900; color:#fff; margin-bottom:16px; line-height:1.15;
+            text-shadow:0 2px 20px rgba(0,0,0,.7), 0 1px 4px rgba(0,0,0,.55);
+        }
+        .slide-content p {
+            font-size:clamp(.9rem,2vw,1.15rem); color:rgba(255,255,255,.95);
+            max-width:620px; margin-bottom:32px; line-height:1.7;
+            text-shadow:0 1px 14px rgba(0,0,0,.65), 0 1px 3px rgba(0,0,0,.5);
+        }
+
         .hero-btns { display:flex; gap:14px; flex-wrap:wrap; justify-content:center; }
         .btn { padding:13px 28px; border-radius:12px; font-weight:700; font-size:.95rem; text-decoration:none; transition:all .2s ease; }
         .btn-primary { background:var(--primary); color:#fff; border:2px solid var(--primary); box-shadow:0 4px 18px rgba(74,29,150,.4); }
         .btn-primary:hover { background:var(--primary-light); border-color:var(--primary-light); transform:translateY(-2px); }
         .btn-outline { background:transparent; color:#fff; border:2px solid #fff; }
         .btn-outline:hover { background:#fff; color:var(--primary); transform:translateY(-2px); }
+
+        /* [5] Flechas: mayor contraste + foco accesible */
         .btn-slide {
             position:absolute; top:50%; transform:translateY(-50%); z-index:3;
-            width:44px; height:44px; border-radius:50%; border:none; cursor:pointer;
-            background:rgba(255,255,255,.2); color:#fff; font-size:1rem;
-            backdrop-filter:blur(4px); transition:background .2s;
+            width:46px; height:46px; border-radius:50%; border:none; cursor:pointer;
+            background:rgba(255,255,255,.25); color:#fff; font-size:1rem;
+            transition:background .2s; outline:none;
         }
-        .btn-slide:hover { background:rgba(255,255,255,.35); }
+        .btn-slide:hover  { background:rgba(255,255,255,.42); }
+        .btn-slide:focus-visible { box-shadow:0 0 0 3px #fff, 0 0 0 5px var(--primary); }
         .btn-slide-prev { left:20px; }
         .btn-slide-next { right:20px; }
-        .slide-dots { position:absolute; bottom:24px; left:50%; transform:translateX(-50%); z-index:3; display:flex; gap:8px; }
+
+        /* [4] Dots: suben para separarse del scroll-down (bottom:62px deja 14px de gap) */
+        .slide-dots { position:absolute; bottom:62px; left:50%; transform:translateX(-50%); z-index:3; display:flex; gap:8px; }
         .dot { width:10px; height:10px; border-radius:50%; border:2px solid rgba(255,255,255,.6); background:transparent; cursor:pointer; transition:all .3s; padding:0; }
         .dot.active { background:#fff; border-color:#fff; transform:scale(1.2); }
+
+        /* [6] Flecha "scroll hacia abajo" animada */
+        .scroll-down {
+            position:absolute; bottom:16px; left:50%; transform:translateX(-50%);
+            z-index:3; display:flex; flex-direction:column; align-items:center; gap:4px;
+            color:rgba(255,255,255,.7); font-size:.72rem; letter-spacing:.08em;
+            text-transform:uppercase; animation:bounceDown 2s infinite;
+        }
+        .scroll-down i { font-size:1.1rem; }
+        @keyframes bounceDown {
+            0%, 100% { transform:translateX(-50%) translateY(0); opacity:.7; }
+            50%       { transform:translateX(-50%) translateY(6px); opacity:1; }
+        }
+
+        /* [7] Responsive móvil ── */
+        @media (max-width: 576px) {
+            #inicio { height:100svh; min-height:480px; }
+            .slide-content { padding:0 18px; padding-top:var(--navbar-h); }
+            .hero-btns { flex-direction:column; align-items:center; gap:10px; }
+            .btn { width:100%; max-width:280px; text-align:center; padding:12px 20px; font-size:.9rem; }
+            .btn-slide { width:36px; height:36px; font-size:.85rem; }
+            .btn-slide-prev { left:10px; }
+            .btn-slide-next { right:10px; }
+        }
 
         /* ── Secciones ── */
         section { padding: 80px 0; }
@@ -151,7 +216,11 @@
 <nav class="navbar" id="navbar">
     <div class="container">
         <div class="navbar-inner">
-            <a href="{{ route('home') }}" style="display:flex;align-items:center;gap:10px;text-decoration:none;"><img src="{{ asset('img/LogoSoloo.png') }}" alt="DisneyStock" style="height:52px;width:auto;object-fit:contain;"><span style="font-family:'Outfit',sans-serif;font-size:1.6rem;font-weight:800;color:#4A1D96;letter-spacing:-.5px;">DisneyStock</span></a><ul class="nav-links">
+        {{-- [1] Logo: flex con gap:8px en clase dedicada, sin margin extra --}}
+            <a href="{{ route('home') }}" class="navbar-logo">
+                <img src="{{ asset('img/LogoSoloo.png') }}" alt="DisneyStock" style="height:46px;width:auto;object-fit:contain;">
+                <span>DisneyStock</span>
+            </a><ul class="nav-links">
                 <li><a href="#inicio"    class="nav-link">Inicio</a></li>
                 <li><a href="#modulos"   class="nav-link">Módulos</a></li>
                 <li><a href="#nosotros"  class="nav-link">Nosotros</a></li>
@@ -170,11 +239,12 @@
 
 {{-- CARRUSEL --}}
 <section id="inicio" style="padding:0;">
-    <div class="slide active">
+    {{-- [1] Slide local: título coherente con el logo + subtítulo menciona Variedades Disney --}}
+    <div class="slide slide-local active">
         <img src="{{ asset('img/Imagen1.jpeg') }}" class="slide-bg" alt="Variedades Disney">
         <div class="slide-content">
-            <h1>Bienvenido a Variedades Disney</h1>
-            <p>DisneyStock reemplaza los cuadernos manuales y centraliza todo tu inventario y ventas en un solo lugar, desde cualquier navegador.</p>
+            <h1>Bienvenido a DisneyStock</h1>
+            <p>El sistema de inventario y ventas de Variedades Disney. Olvídate de los cuadernos y controla todo desde cualquier navegador.</p>
             <div class="hero-btns">
                 <a href="{{ route('login') }}" class="btn btn-primary">Ingresar al Sistema</a>
                 <a href="#modulos" class="btn btn-outline">Ver Módulos</a>
@@ -182,8 +252,11 @@
         </div>
     </div>
 
+    {{-- Slide 2: imagen Unsplash (accesorios.jpg no existe en public/img) --}}
     <div class="slide">
-        <img src="https://images.unsplash.com/photo-1611085583191-a3b181a88401?w=1600&q=80" class="slide-bg" alt="Accesorios">
+        <img src="https://images.unsplash.com/photo-1611085583191-a3b181a88401?w=1600&q=80"
+             class="slide-bg" alt="Accesorios"
+             style="object-fit:cover; object-position:center 40%;">
         <div class="slide-content">
             <h1>Controla cada accesorio</h1>
             <p>Manillas, collares, aretes y más. Registra cada producto con su precio, cantidad y proveedor, y recibe alertas de stock bajo.</p>
@@ -218,9 +291,15 @@
         </div>
     </div>
 
-    <button class="btn-slide btn-slide-prev" onclick="changeSlide(-1)"><i class="fas fa-chevron-left"></i></button>
-    <button class="btn-slide btn-slide-next" onclick="changeSlide(1)"><i class="fas fa-chevron-right"></i></button>
+    {{-- [5] Flechas con aria-label para accesibilidad --}}
+    <button class="btn-slide btn-slide-prev" onclick="changeSlide(-1)" aria-label="Slide anterior"><i class="fas fa-chevron-left"></i></button>
+    <button class="btn-slide btn-slide-next" onclick="changeSlide(1)"  aria-label="Slide siguiente"><i class="fas fa-chevron-right"></i></button>
     <div class="slide-dots" id="slideDots"></div>
+
+    {{-- [6] Indicador scroll hacia abajo --}}
+    <div class="scroll-down" aria-hidden="true">
+        <i class="fas fa-chevron-down"></i>
+    </div>
 </section>
 
 {{-- MÓDULOS --}}
@@ -235,7 +314,7 @@
             <div class="role-card">
                 <div class="role-icon"><i class="fas fa-boxes-stacked"></i></div>
                 <h3>Inventario</h3>
-                <p>Registra y consulta productos con nombre, categoría, cantidad, precio, fecha de ingreso y proveedor. Alertas automáticas de stock bajo.</p>
+                <p>Registra productos con su categoría, proveedor, cantidad y precios. Registra entradas de mercancía y consulta el historial de movimientos de cada producto.</p>
             </div>
             <div class="role-card">
                 <div class="role-icon"><i class="fas fa-cash-register"></i></div>
@@ -245,12 +324,12 @@
             <div class="role-card">
                 <div class="role-icon"><i class="fas fa-chart-bar"></i></div>
                 <h3>Reportes</h3>
-                <p>Reportes de ventas por período, inventario valorizado y productos con bajo stock. Información clara para tomar mejores decisiones.</p>
+                <p>Reportes de ventas por período (hoy, esta semana o este mes) con el total vendido, el número de transacciones y los productos más vendidos.</p>
             </div>
             <div class="role-card">
                 <div class="role-icon"><i class="fas fa-user-shield"></i></div>
                 <h3>Control de Roles</h3>
-                <p>Dos niveles de acceso: <strong>Administrador</strong> con control total y <strong>Empleado</strong> con permisos limitados.</p>
+                <p>Dos niveles de acceso: Administrador con control total y Empleado con permisos limitados. Cada usuario ve solo lo que necesita.</p>
             </div>
             <div class="role-card">
                 <div class="role-icon"><i class="fas fa-bell"></i></div>
@@ -260,7 +339,7 @@
             <div class="role-card">
                 <div class="role-icon"><i class="fas fa-tags"></i></div>
                 <h3>Categorías</h3>
-                <p>Organiza tus productos en categorías: Manillas, Vestidos, Accesorios, Bolsos, Zapatos y más. Filtra y encuentra cualquier artículo rápido.</p>
+                <p>Organiza tus productos en categorías: Manillas, Vestidos, Bolsos, Zapatos, Bisutería y más. Filtra y encuentra cualquier artículo rápido.</p>
             </div>
             <div class="role-card">
                 <div class="role-icon"><i class="fas fa-users"></i></div>
@@ -282,7 +361,7 @@
         <div class="section-header">
             <span>Sobre el Proyecto</span>
             <h2>DisneyStock para Variedades Disney</h2>
-            <p>Un sistema desarrollado a la medida del negocio, con metodología en cascada y enfoque en seguridad de datos conforme a la Ley 1581 de 2012.</p>
+            <p>Un sistema hecho a la medida del negocio, desarrollado con metodología en cascada y teniendo en cuenta la Ley 1581 de 2012.</p>
         </div>
         <div class="roles-grid">
             <div class="role-card" style="border-top:4px solid var(--primary-light);">
@@ -290,10 +369,10 @@
                 <h3 style="font-size:1.05rem;">Misión</h3>
                 <p style="font-size:.88rem;">Automatizar el inventario y el registro de ventas de Variedades Disney, reemplazando los cuadernos manuales por un sistema digital que centraliza toda la información, reduce errores y permite consultar datos en segundos.</p>
             </div>
-            <div class="role-card" style="border-top:4px solid var(--disney-300, #A78BFA);">
+            <div class="role-card" style="border-top:4px solid var(--primary-light);">
                 <div class="role-icon"><i class="fas fa-eye"></i></div>
                 <h3 style="font-size:1.05rem;">Visión</h3>
-                <p style="font-size:.88rem;">Ser la herramienta de referencia para la gestión de Variedades Disney, escalable hacia otros locales del Huila, reconocida por su facilidad de uso, seguridad y confiabilidad.</p>
+                <p style="font-size:.88rem;">Consolidarse como una solución confiable y fácil de usar para la gestión de pequeños comercios, con la posibilidad de adaptarse a otros locales del Huila.</p>
             </div>
         </div>
         <div class="stats-grid">
@@ -311,18 +390,18 @@
         <div class="section-header">
             <span>Objetivos del Sistema</span>
             <h2>¿Por qué DisneyStock?</h2>
-            <p>Diseñado bajo metodología en cascada, con control de acceso por roles y pensado para el día a día de Variedades Disney en el Huila, Colombia.</p>
+            <p>Con control de acceso por roles y pensado para el día a día de Variedades Disney en el Huila, Colombia.</p>
         </div>
         <div class="roles-grid">
             <div class="role-card">
                 <div class="role-icon"><i class="fas fa-bolt"></i></div>
                 <h3>Automatización</h3>
-                <p>Cada venta descuenta el stock sola. El total de la venta y las alertas de stock bajo se calculan automáticamente.</p>
+                <p>Cada venta actualiza el stock al instante. El total de la venta y las alertas de stock bajo se calculan automáticamente.</p>
             </div>
             <div class="role-card">
                 <div class="role-icon"><i class="fas fa-shield-halved"></i></div>
                 <h3>Seguridad</h3>
-                <p>Contraseñas cifradas, control de acceso por roles y cumplimiento de la <strong>Ley 1581 de 2012</strong> de protección de datos.</p>
+                <p>Contraseñas protegidas con hash, control de acceso por roles y manejo de la información teniendo en cuenta la Ley 1581 de 2012 de protección de datos.</p>
             </div>
             <div class="role-card">
                 <div class="role-icon"><i class="fas fa-chart-line"></i></div>
@@ -344,9 +423,7 @@
                 </a>
                 <p>Sistema de gestión de inventario y ventas para Variedades Disney. Datos seguros, decisiones inteligentes.</p>
                 <div class="social-links">
-                    <a href="#" class="social-link"><i class="fab fa-facebook-f"></i></a>
-                    <a href="#" class="social-link"><i class="fab fa-instagram"></i></a>
-                    <a href="#" class="social-link"><i class="fab fa-whatsapp"></i></a>
+                    {{-- [7] Redes sociales eliminadas: el local no tiene cuentas para enlazar --}}
                 </div>
             </div>
             <div>
@@ -361,10 +438,10 @@
             <div>
                 <h4 class="footer-title">Legal</h4>
                 <ul class="footer-links">
-                    <li><a href="#" onclick="abrirModalPrivacidad(); return false;">Privacidad de Datos</a></li>
-                    <li><a href="#" onclick="abrirModalPrivacidad(); return false;">Ley 1581 de 2012</a></li>
-                    <li><a href="#">Términos de Uso</a></li>
-                    <li><a href="#">Soporte</a></li>
+                    <li><a href="javascript:void(0)" onclick="abrirModalPrivacidad()">Privacidad de Datos</a></li>
+                    <li><a href="javascript:void(0)" onclick="abrirModalPrivacidad()">Ley 1581 de 2012</a></li>
+                    <li><a href="javascript:void(0)" onclick="abrirModalTerminos()">Términos de Uso</a></li>
+                    <li><a href="javascript:void(0)" onclick="abrirModalSoporte()">Soporte</a></li>
                 </ul>
             </div>
             <div class="footer-contact">
@@ -411,11 +488,11 @@
         document.getElementById('navbar').classList.toggle('scrolled', window.scrollY > 50);
     });
 </script>
-{{-- MODAL PRIVACIDAD --}}
+{{-- MODAL PRIVACIDAD — [1][2][3][4] textos actualizados --}}
 <div id="modalPrivacidad" style="display:none; position:fixed; inset:0; z-index:2000; align-items:center; justify-content:center; padding:24px;">
-    <div style="position:absolute; inset:0; background:rgba(30,7,71,.55); backdrop-filter:blur(4px);" onclick="cerrarModalPrivacidad()"></div>
+    <div style="position:absolute; inset:0; background:rgba(30,7,71,.55); backdrop-filter:blur(4px);" onclick="cerrarModal('modalPrivacidad')"></div>
     <div style="position:relative; background:#fff; border-radius:20px; max-width:540px; width:100%; padding:40px 36px; box-shadow:0 20px 60px rgba(74,29,150,.2);">
-        <button onclick="cerrarModalPrivacidad()" style="position:absolute; top:16px; right:18px; background:none; border:none; font-size:1.3rem; color:#9CA3AF; cursor:pointer; line-height:1;">
+        <button onclick="cerrarModal('modalPrivacidad')" style="position:absolute; top:16px; right:18px; background:none; border:none; font-size:1.3rem; color:#9CA3AF; cursor:pointer; line-height:1;">
             <i class="fas fa-xmark"></i>
         </button>
         <div style="width:48px; height:48px; border-radius:14px; background:#EDE9FE; display:flex; align-items:center; justify-content:center; font-size:1.3rem; color:#7C3AED; margin-bottom:18px;">
@@ -425,36 +502,98 @@
         <p style="font-size:.8rem; font-weight:700; letter-spacing:.1em; text-transform:uppercase; color:#7C3AED; margin-bottom:20px;">Ley 1581 de 2012 — Colombia</p>
         <div style="font-size:.92rem; color:#374151; line-height:1.75;">
             <p style="margin-bottom:14px;">
-                <strong>DisneyStock</strong> recopila y trata únicamente los datos necesarios para el funcionamiento del sistema: nombre de usuario, contraseña cifrada y rol de acceso.
+                {{-- [1] "cifrada" → "protegida con hash" --}}
+                <strong>DisneyStock</strong> recopila y trata únicamente los datos necesarios para el funcionamiento del sistema: nombre de usuario, contraseña protegida con hash y rol de acceso.
             </p>
             <p style="margin-bottom:14px;">
-                Esta información se usa exclusivamente para autenticar usuarios, registrar ventas y movimientos de inventario dentro de la plataforma. <strong>No se comparte con terceros bajo ninguna circunstancia.</strong>
+                {{-- [2] frase actualizada, negrita conservada --}}
+                Esta información se usa exclusivamente para autenticar usuarios, registrar ventas y movimientos de inventario dentro de la plataforma. <strong>No se comparte con terceros, salvo por requerimiento de una autoridad competente.</strong>
             </p>
             <p style="margin-bottom:14px;">
-                El tratamiento de datos personales se realiza conforme a la <strong>Ley 1581 de 2012</strong> de Protección de Datos Personales de Colombia y sus decretos reglamentarios.
+                {{-- [3] "conforme" → "teniendo en cuenta" --}}
+                El tratamiento de datos personales se realiza teniendo en cuenta la <strong>Ley 1581 de 2012</strong> de Protección de Datos Personales de Colombia y sus decretos reglamentarios.
             </p>
             <p>
-                Los usuarios tienen derecho a conocer, actualizar y rectificar sus datos. Para ejercer estos derechos, comuníquese con la administradora del sistema.
+                {{-- [4] añadido "suprimir" --}}
+                Los usuarios tienen derecho a conocer, actualizar, rectificar y suprimir sus datos. Para ejercer estos derechos, comuníquese con la administradora del sistema.
             </p>
         </div>
-        <button onclick="cerrarModalPrivacidad()" style="margin-top:28px; width:100%; padding:12px; background:linear-gradient(135deg,#4A1D96,#7C3AED); color:#fff; border:none; border-radius:12px; font-family:'Outfit',sans-serif; font-size:.95rem; font-weight:700; cursor:pointer;">
+        <button onclick="cerrarModal('modalPrivacidad')" style="margin-top:28px; width:100%; padding:12px; background:#4A1D96; color:#fff; border:2px solid #4A1D96; border-radius:12px; font-family:'Outfit',sans-serif; font-size:.95rem; font-weight:700; cursor:pointer;"
+            onmouseover="this.style.background='#7C3AED';this.style.borderColor='#7C3AED'"
+            onmouseout="this.style.background='#4A1D96';this.style.borderColor='#4A1D96'">
+            Entendido
+        </button>
+    </div>
+</div>
+
+{{-- [5] MODAL TÉRMINOS DE USO --}}
+<div id="modalTerminos" style="display:none; position:fixed; inset:0; z-index:2000; align-items:center; justify-content:center; padding:24px;">
+    <div style="position:absolute; inset:0; background:rgba(30,7,71,.55); backdrop-filter:blur(4px);" onclick="cerrarModal('modalTerminos')"></div>
+    <div style="position:relative; background:#fff; border-radius:20px; max-width:540px; width:100%; padding:40px 36px; box-shadow:0 20px 60px rgba(74,29,150,.2);">
+        <button onclick="cerrarModal('modalTerminos')" style="position:absolute; top:16px; right:18px; background:none; border:none; font-size:1.3rem; color:#9CA3AF; cursor:pointer; line-height:1;">
+            <i class="fas fa-xmark"></i>
+        </button>
+        <div style="width:48px; height:48px; border-radius:14px; background:#EDE9FE; display:flex; align-items:center; justify-content:center; font-size:1.3rem; color:#7C3AED; margin-bottom:18px;">
+            <i class="fas fa-file-contract"></i>
+        </div>
+        <h2 style="font-family:'Outfit',sans-serif; font-size:1.4rem; font-weight:800; color:#1E1B4B; margin-bottom:6px;">Términos de Uso</h2>
+        <p style="font-size:.8rem; font-weight:700; letter-spacing:.1em; text-transform:uppercase; color:#7C3AED; margin-bottom:20px;">Variedades Disney — DisneyStock</p>
+        <div style="font-size:.92rem; color:#374151; line-height:1.75;">
+            <p style="margin-bottom:12px;">El sistema es de uso exclusivo del personal autorizado de Variedades Disney.</p>
+            <p style="margin-bottom:12px;">Cada usuario es responsable de su usuario y contraseña y no debe compartirlos.</p>
+            <p style="margin-bottom:12px;">La información registrada (productos, ventas y empleados) es confidencial y solo puede usarse para la gestión del negocio.</p>
+            <p>La administradora puede desactivar a los usuarios que hagan mal uso del sistema.</p>
+        </div>
+        <button onclick="cerrarModal('modalTerminos')" style="margin-top:28px; width:100%; padding:12px; background:#4A1D96; color:#fff; border:2px solid #4A1D96; border-radius:12px; font-family:'Outfit',sans-serif; font-size:.95rem; font-weight:700; cursor:pointer;"
+            onmouseover="this.style.background='#7C3AED';this.style.borderColor='#7C3AED'"
+            onmouseout="this.style.background='#4A1D96';this.style.borderColor='#4A1D96'">
+            Entendido
+        </button>
+    </div>
+</div>
+
+{{-- [6] MODAL SOPORTE --}}
+<div id="modalSoporte" style="display:none; position:fixed; inset:0; z-index:2000; align-items:center; justify-content:center; padding:24px;">
+    <div style="position:absolute; inset:0; background:rgba(30,7,71,.55); backdrop-filter:blur(4px);" onclick="cerrarModal('modalSoporte')"></div>
+    <div style="position:relative; background:#fff; border-radius:20px; max-width:480px; width:100%; padding:40px 36px; box-shadow:0 20px 60px rgba(74,29,150,.2);">
+        <button onclick="cerrarModal('modalSoporte')" style="position:absolute; top:16px; right:18px; background:none; border:none; font-size:1.3rem; color:#9CA3AF; cursor:pointer; line-height:1;">
+            <i class="fas fa-xmark"></i>
+        </button>
+        <div style="width:48px; height:48px; border-radius:14px; background:#EDE9FE; display:flex; align-items:center; justify-content:center; font-size:1.3rem; color:#7C3AED; margin-bottom:18px;">
+            <i class="fas fa-headset"></i>
+        </div>
+        <h2 style="font-family:'Outfit',sans-serif; font-size:1.4rem; font-weight:800; color:#1E1B4B; margin-bottom:6px;">Soporte</h2>
+        <p style="font-size:.8rem; font-weight:700; letter-spacing:.1em; text-transform:uppercase; color:#7C3AED; margin-bottom:20px;">DisneyStock</p>
+        <p style="font-size:.92rem; color:#374151; line-height:1.75;">
+            Para soporte técnico o recuperación de acceso, comunícate con la administradora del sistema.
+        </p>
+        <button onclick="cerrarModal('modalSoporte')" style="margin-top:28px; width:100%; padding:12px; background:#4A1D96; color:#fff; border:2px solid #4A1D96; border-radius:12px; font-family:'Outfit',sans-serif; font-size:.95rem; font-weight:700; cursor:pointer;"
+            onmouseover="this.style.background='#7C3AED';this.style.borderColor='#7C3AED'"
+            onmouseout="this.style.background='#4A1D96';this.style.borderColor='#4A1D96'">
             Entendido
         </button>
     </div>
 </div>
 
 <script>
-    function abrirModalPrivacidad() {
-        const m = document.getElementById('modalPrivacidad');
-        m.style.display = 'flex';
+    function abrirModalPrivacidad() { abrirModal('modalPrivacidad'); }
+    function abrirModalTerminos()   { abrirModal('modalTerminos'); }
+    function abrirModalSoporte()    { abrirModal('modalSoporte'); }
+
+    function abrirModal(id) {
+        document.getElementById(id).style.display = 'flex';
         document.body.style.overflow = 'hidden';
     }
-    function cerrarModalPrivacidad() {
-        const m = document.getElementById('modalPrivacidad');
-        m.style.display = 'none';
+    function cerrarModal(id) {
+        document.getElementById(id).style.display = 'none';
         document.body.style.overflow = '';
     }
-    document.addEventListener('keydown', e => { if (e.key === 'Escape') cerrarModalPrivacidad(); });
+    // Cerrar cualquier modal abierto con Escape
+    document.addEventListener('keydown', e => {
+        if (e.key === 'Escape') {
+            ['modalPrivacidad','modalTerminos','modalSoporte'].forEach(cerrarModal);
+        }
+    });
 </script>
 
 </body>
