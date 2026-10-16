@@ -9,6 +9,8 @@ use App\Http\Controllers\ReporteController;
 use App\Http\Controllers\InventarioController;
 use App\Http\Controllers\VentaController;
 
+use App\Http\Controllers\UsuarioController;
+
 // ── Pública ───────────────────────────────────────────────
 Route::get('/', fn() => view('welcome'))->name('home');
 
@@ -55,6 +57,12 @@ Route::middleware(['auth', 'role:administrador', 'no-cache'])->group(function ()
     Route::resource('categorias', CategoriaController::class)
         ->except(['create', 'edit', 'show']);
 
-    // Aquí irán: usuarios …
+    // Usuarios — solo administrador
+    Route::resource('usuarios', UsuarioController::class)
+        ->except(['create', 'edit', 'show']);
+    Route::patch('usuarios/{usuario}/toggle', [UsuarioController::class, 'toggle'])
+        ->name('usuarios.toggle');
+    Route::patch('usuarios/{usuario}/reset-password', [UsuarioController::class, 'resetPassword'])
+        ->name('usuarios.reset-password');
 
 });
