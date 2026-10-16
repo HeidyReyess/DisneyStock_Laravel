@@ -6,6 +6,7 @@ use App\Models\Categoria;
 use App\Models\Inventario;
 use App\Models\Producto;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;   // [fix] faltaba este use — causaba "Class Auth not found"
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 
@@ -27,8 +28,8 @@ class ProductoController extends Controller
             $query->where('estado', $request->estado);
         }
 
-        $productos   = $query->get();
-        $categorias  = Categoria::orderBy('nombre_categoria')->get();
+        $productos  = $query->get();
+        $categorias = Categoria::orderBy('nombre_categoria')->get();
 
         return view('admin.productos.index', compact('productos', 'categorias'));
     }
@@ -37,24 +38,46 @@ class ProductoController extends Controller
     public function store(Request $request)
     {
         if (!Auth::user()->esAdmin()) abort(403);
+
+        // [4][6][7] Validaciones actualizadas: enteros, mínimos, categoría obligatoria
         $request->validate([
-            'nombre'        => ['required', 'string', 'max:255'],
-            'precio_venta'  => ['required', 'numeric', 'min:0'],
-            'precio_compra' => ['required', 'numeric', 'min:0'],
+            'nombre'        => ['required', 'string', 'max:100'],
+            'precio_venta'  => ['required', 'integer', 'min:1'],
+            'precio_compra' => ['required', 'integer', 'min:1'],
             'stock_inicial' => ['required', 'integer', 'min:0'],
-            'stock_minimo'  => ['required', 'integer', 'min:0'],
+            'stock_minimo'  => ['required', 'integer', 'min:1'],
             'fecha_ingreso' => ['required', 'date'],
             'proveedor'     => ['nullable', 'string', 'max:200'],
-            'categoria_id'  => ['nullable', 'exists:categorias,id'],
+            'categoria_id'  => ['required', 'exists:categorias,id'],
             'imagen'        => ['nullable', 'image', 'mimes:jpg,jpeg,png,webp', 'max:2048'],
         ], [
-            'nombre.required'       => 'El nombre del producto es obligatorio.',
-            'precio_venta.required' => 'El precio de venta es obligatorio.',
-            'precio_venta.min'      => 'El precio de venta no puede ser negativo.',
-            'stock_inicial.min'     => 'El stock inicial no puede ser negativo.',
-            'imagen.image'          => 'El archivo debe ser una imagen.',
-            'imagen.max'            => 'La imagen no puede superar 2MB.',
+            'nombre.required'         => 'El nombre del producto es obligatorio.',
+            'nombre.max'              => 'El nombre no puede superar 100 caracteres.',
+            'precio_venta.required'   => 'El precio de venta es obligatorio.',
+            'precio_venta.integer'    => 'El precio de venta debe ser un número entero.',
+            'precio_venta.min'        => 'El precio de venta debe ser al menos 1.',
+            'precio_compra.required'  => 'El precio de compra es obligatorio.',
+            'precio_compra.integer'   => 'El precio de compra debe ser un número entero.',
+            'precio_compra.min'       => 'El precio de compra debe ser al menos 1.',
+            'stock_inicial.required'  => 'El stock inicial es obligatorio.',
+            'stock_inicial.integer'   => 'El stock inicial debe ser un número entero.',
+            'stock_inicial.min'       => 'El stock inicial no puede ser negativo.',
+            'stock_minimo.required'   => 'El stock mínimo es obligatorio.',
+            'stock_minimo.integer'    => 'El stock mínimo debe ser un número entero.',
+            'stock_minimo.min'        => 'El stock mínimo debe ser al menos 1.',
+            'fecha_ingreso.required'  => 'La fecha de ingreso es obligatoria.',
+            'categoria_id.required'   => 'La categoría es obligatoria.',
+            'categoria_id.exists'     => 'La categoría seleccionada no existe.',
+            'imagen.image'            => 'El archivo debe ser una imagen.',
+            'imagen.max'              => 'La imagen no puede superar 2MB.',
         ]);
+
+        // [5] Precio de venta debe ser mayor que precio de compra
+        if ((int)$request->precio_venta <= (int)$request->precio_compra) {
+            return back()
+                ->withErrors(['precio_venta' => 'El precio de venta debe ser mayor que el precio de compra.'])
+                ->withInput();
+        }
 
         $imagenNombre = null;
         if ($request->hasFile('imagen')) {
@@ -74,10 +97,10 @@ class ProductoController extends Controller
             ]);
 
             Inventario::create([
-                'producto_id'        => $producto->id,
-                'cantidad_stock'     => $request->stock_inicial,
-                'stock_minimo'       => $request->stock_minimo,
-                'fecha_actualizacion'=> now()->toDateString(),
+                'producto_id'         => $producto->id,
+                'cantidad_stock'      => $request->stock_inicial,
+                'stock_minimo'        => $request->stock_minimo,
+                'fecha_actualizacion' => now()->toDateString(),
             ]);
         });
 
@@ -89,20 +112,45 @@ class ProductoController extends Controller
     public function update(Request $request, Producto $producto)
     {
         if (!Auth::user()->esAdmin()) abort(403);
+
+        // [4][6][7] Validaciones actualizadas
         $request->validate([
-            'nombre'        => ['required', 'string', 'max:255'],
-            'precio_venta'  => ['required', 'numeric', 'min:0'],
-            'precio_compra' => ['required', 'numeric', 'min:0'],
-            'stock_minimo'  => ['required', 'integer', 'min:0'],
+            'nombre'        => ['required', 'string', 'max:100'],
+            'precio_venta'  => ['required', 'integer', 'min:1'],
+            'precio_compra' => ['required', 'integer', 'min:1'],
+            'stock_minimo'  => ['required', 'integer', 'min:1'],
             'fecha_ingreso' => ['required', 'date'],
             'proveedor'     => ['nullable', 'string', 'max:200'],
-            'categoria_id'  => ['nullable', 'exists:categorias,id'],
+            'categoria_id'  => ['required', 'exists:categorias,id'],
             'imagen'        => ['nullable', 'image', 'mimes:jpg,jpeg,png,webp', 'max:2048'],
+        ], [
+            'nombre.required'        => 'El nombre del producto es obligatorio.',
+            'nombre.max'             => 'El nombre no puede superar 100 caracteres.',
+            'precio_venta.required'  => 'El precio de venta es obligatorio.',
+            'precio_venta.integer'   => 'El precio de venta debe ser un número entero.',
+            'precio_venta.min'       => 'El precio de venta debe ser al menos 1.',
+            'precio_compra.required' => 'El precio de compra es obligatorio.',
+            'precio_compra.integer'  => 'El precio de compra debe ser un número entero.',
+            'precio_compra.min'      => 'El precio de compra debe ser al menos 1.',
+            'stock_minimo.required'  => 'El stock mínimo es obligatorio.',
+            'stock_minimo.integer'   => 'El stock mínimo debe ser un número entero.',
+            'stock_minimo.min'       => 'El stock mínimo debe ser al menos 1.',
+            'fecha_ingreso.required' => 'La fecha de ingreso es obligatoria.',
+            'categoria_id.required'  => 'La categoría es obligatoria.',
+            'categoria_id.exists'    => 'La categoría seleccionada no existe.',
+            'imagen.image'           => 'El archivo debe ser una imagen.',
+            'imagen.max'             => 'La imagen no puede superar 2MB.',
         ]);
+
+        // [5] Precio de venta debe ser mayor que precio de compra
+        if ((int)$request->precio_venta <= (int)$request->precio_compra) {
+            return back()
+                ->withErrors(['precio_venta' => 'El precio de venta debe ser mayor que el precio de compra.'])
+                ->withInput();
+        }
 
         $imagenNombre = $producto->imagen;
         if ($request->hasFile('imagen')) {
-            // Borrar imagen anterior
             if ($imagenNombre) {
                 Storage::disk('public')->delete($imagenNombre);
             }
@@ -136,6 +184,7 @@ class ProductoController extends Controller
     public function toggle(Producto $producto)
     {
         if (!Auth::user()->esAdmin()) abort(403);
+
         $producto->update([
             'estado' => $producto->estado === 'activo' ? 'inactivo' : 'activo',
         ]);
@@ -150,6 +199,7 @@ class ProductoController extends Controller
     public function destroy(Producto $producto)
     {
         if (!Auth::user()->esAdmin()) abort(403);
+
         if ($producto->tieneDependencias()) {
             return redirect()->route('productos.index')
                 ->with('error', "No se puede eliminar \"{$producto->nombre}\": tiene ventas o movimientos registrados. Desactívalo en su lugar.");
@@ -160,7 +210,7 @@ class ProductoController extends Controller
         }
 
         $nombre = $producto->nombre;
-        $producto->delete(); // cascadea a inventario y alertas
+        $producto->delete();
 
         return redirect()->route('productos.index')
             ->with('success', "Producto \"{$nombre}\" eliminado correctamente.");

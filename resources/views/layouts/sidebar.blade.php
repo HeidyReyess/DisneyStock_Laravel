@@ -232,14 +232,12 @@
             <div class="topbar-badge" style="background:#EDE9FE; color:#4A1D96; font-weight:700; font-size:.85rem;">
                 {{ strtoupper(substr(Auth::user()->nombre, 0, 1)) }}
             </div>
-            {{-- Cerrar sesión --}}
-            <form method="POST" action="{{ route('logout') }}" style="margin:0;">
-                @csrf
-                <button type="submit" class="topbar-badge" title="Cerrar sesión"
-                    style="background:#FEE2E2; color:#DC2626; border:none; cursor:pointer;">
-                    <i class="fas fa-right-from-bracket" style="font-size:.9rem;"></i>
-                </button>
-            </form>
+            {{-- [4] Cerrar sesión: tooltip + modal de confirmación --}}
+            <button type="button" class="topbar-badge" title="Cerrar sesión"
+                onclick="document.getElementById('modalLogout').style.display='flex'"
+                style="background:#FEE2E2; color:#DC2626; border:none; cursor:pointer;">
+                <i class="fas fa-right-from-bracket" style="font-size:.9rem;"></i>
+            </button>
         </div>
     </header>
 
@@ -266,6 +264,34 @@
 
 </div>
 
+{{-- Modal: cerrar sesión --}}
+<div id="modalLogout" style="display:none; position:fixed; inset:0; z-index:2000; align-items:center; justify-content:center; padding:24px;">
+    <div style="position:absolute; inset:0; background:rgba(30,7,71,.45);" onclick="this.parentElement.style.display='none'"></div>
+    <div style="position:relative; background:#fff; border-radius:16px; max-width:380px; width:100%; padding:32px 28px; box-shadow:0 16px 48px rgba(74,29,150,.18); text-align:center;">
+        <div style="width:48px; height:48px; border-radius:14px; background:#FEE2E2; display:flex; align-items:center; justify-content:center; font-size:1.3rem; color:#DC2626; margin:0 auto 16px;">
+            <i class="fas fa-right-from-bracket"></i>
+        </div>
+        <h3 style="font-family:'Outfit',sans-serif; font-size:1.1rem; font-weight:800; color:#1E1B4B; margin-bottom:8px;">¿Seguro que deseas cerrar sesión?</h3>
+        <p style="font-size:.87rem; color:#6B7280; line-height:1.6; margin-bottom:24px;">Tu sesión se cerrará y deberás volver a iniciar sesión para acceder al sistema.</p>
+        <div style="display:flex; gap:10px; justify-content:center;">
+            <button onclick="document.getElementById('modalLogout').style.display='none'"
+                style="padding:9px 22px; background:#F5F3FF; color:#5B21B6; border:1.5px solid #DDD6FE; border-radius:9px; font-size:.88rem; font-weight:600; cursor:pointer;"
+                onmouseover="this.style.background='#EDE9FE'" onmouseout="this.style.background='#F5F3FF'">
+                Cancelar
+            </button>
+            <form method="POST" action="{{ route('logout') }}" style="margin:0;">
+                @csrf
+                <button type="submit"
+                    style="padding:9px 22px; background:#DC2626; color:#fff; border:2px solid #DC2626; border-radius:9px; font-family:'Outfit',sans-serif; font-size:.88rem; font-weight:700; cursor:pointer;"
+                    onmouseover="this.style.background='#B91C1C';this.style.borderColor='#B91C1C'"
+                    onmouseout="this.style.background='#DC2626';this.style.borderColor='#DC2626'">
+                    <i class="fas fa-right-from-bracket"></i> Cerrar sesión
+                </button>
+            </form>
+        </div>
+    </div>
+</div>
+
 {{-- Modal: próximamente --}}
 <div id="modalProximamente" style="display:none; position:fixed; inset:0; z-index:2000; align-items:center; justify-content:center; padding:24px;">
     <div style="position:absolute; inset:0; background:rgba(30,7,71,.45);" onclick="this.parentElement.style.display='none'"></div>
@@ -289,7 +315,10 @@ function proximamente() {
     document.getElementById('modalProximamente').style.display = 'flex';
 }
 document.addEventListener('keydown', function(e) {
-    if (e.key === 'Escape') document.getElementById('modalProximamente').style.display = 'none';
+    if (e.key === 'Escape') {
+        document.getElementById('modalProximamente').style.display = 'none';
+        document.getElementById('modalLogout').style.display = 'none';
+    }
 });
 </script>
 

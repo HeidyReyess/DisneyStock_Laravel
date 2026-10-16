@@ -104,8 +104,11 @@
             <div class="stat-label">Ingresos del mes</div>
         </div>
     </div>
+    {{-- [1] Ícono rojo solo si hay stock bajo; lila si es 0 --}}
     <div class="stat-card">
-        <div class="stat-icon red"><i class="fas fa-triangle-exclamation"></i></div>
+        <div class="stat-icon {{ $stockBajo > 0 ? 'red' : 'purple' }}">
+            <i class="fas fa-triangle-exclamation"></i>
+        </div>
         <div>
             <div class="stat-value">{{ $stockBajo }}</div>
             <div class="stat-label">Stock bajo mínimo</div>
