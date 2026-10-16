@@ -3,6 +3,7 @@
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\CategoriaController;
+use App\Http\Controllers\ProductoController;
 
 // ── Pública ───────────────────────────────────────────────
 Route::get('/', fn() => view('welcome'))->name('home');
@@ -18,7 +19,13 @@ Route::middleware(['auth', 'no-cache'])->group(function () {
     // Dashboard
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
 
-    // Aquí irán: productos, inventario, ventas, reportes …
+    // Productos (admin y empleado pueden ver; toggle y destroy solo admin en el controller)
+    Route::resource('productos', ProductoController::class)
+        ->except(['create', 'edit', 'show']);
+    Route::patch('productos/{producto}/toggle', [ProductoController::class, 'toggle'])
+        ->name('productos.toggle');
+
+    // Aquí irán: inventario, ventas, reportes …
 
 });
 
@@ -27,7 +34,7 @@ Route::middleware(['auth', 'no-cache'])->group(function () {
 // ═══════════════════════════════════════════════════════════
 Route::middleware(['auth', 'role:administrador', 'no-cache'])->group(function () {
 
-    // Categorías (sin create/edit — formularios en modales inline)
+    // Categorías
     Route::resource('categorias', CategoriaController::class)
         ->except(['create', 'edit', 'show']);
 
