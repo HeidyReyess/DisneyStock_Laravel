@@ -6,6 +6,7 @@ use App\Http\Controllers\CategoriaController;
 use App\Http\Controllers\ProductoController;
 
 use App\Http\Controllers\InventarioController;
+use App\Http\Controllers\VentaController;
 
 // ── Pública ───────────────────────────────────────────────
 Route::get('/', fn() => view('welcome'))->name('home');
@@ -31,7 +32,13 @@ Route::middleware(['auth', 'no-cache'])->group(function () {
     Route::get('/inventario', [InventarioController::class, 'index'])->name('inventario.index');
     Route::post('/inventario/movimiento', [InventarioController::class, 'movimiento'])->name('inventario.movimiento');
 
-    // Aquí irán: ventas, reportes …
+    // Ventas
+    Route::resource('ventas', VentaController::class)
+        ->except(['create', 'edit']);
+    Route::patch('ventas/{venta}/anular', [VentaController::class, 'anular'])
+        ->name('ventas.anular');
+
+    // Aquí irán: reportes …
 
 });
 
