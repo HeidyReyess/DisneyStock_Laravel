@@ -36,6 +36,7 @@ class ProductoController extends Controller
     // POST /productos
     public function store(Request $request)
     {
+        if (!Auth::user()->esAdmin()) abort(403);
         $request->validate([
             'nombre'        => ['required', 'string', 'max:255'],
             'precio_venta'  => ['required', 'numeric', 'min:0'],
@@ -87,6 +88,7 @@ class ProductoController extends Controller
     // PUT /productos/{producto}
     public function update(Request $request, Producto $producto)
     {
+        if (!Auth::user()->esAdmin()) abort(403);
         $request->validate([
             'nombre'        => ['required', 'string', 'max:255'],
             'precio_venta'  => ['required', 'numeric', 'min:0'],
@@ -133,6 +135,7 @@ class ProductoController extends Controller
     // PATCH /productos/{producto}/toggle
     public function toggle(Producto $producto)
     {
+        if (!Auth::user()->esAdmin()) abort(403);
         $producto->update([
             'estado' => $producto->estado === 'activo' ? 'inactivo' : 'activo',
         ]);
@@ -146,6 +149,7 @@ class ProductoController extends Controller
     // DELETE /productos/{producto}
     public function destroy(Producto $producto)
     {
+        if (!Auth::user()->esAdmin()) abort(403);
         if ($producto->tieneDependencias()) {
             return redirect()->route('productos.index')
                 ->with('error', "No se puede eliminar \"{$producto->nombre}\": tiene ventas o movimientos registrados. Desactívalo en su lugar.");

@@ -161,39 +161,36 @@
 
         <div class="sidebar-section">Inventario</div>
 
-        <a href="{{ Route::has('productos.index') ? route('productos.index') : '#' }}"
-           onclick="{{ Route::has('productos.index') ? 'return true' : 'proximamente(); return false' }}"
+        <a href="{{ route('productos.index') }}"
            class="sidebar-link {{ request()->routeIs('productos.*') ? 'active' : '' }}">
             <i class="fas fa-box"></i> Productos
         </a>
-        <a href="{{ Route::has('inventario.index') ? route('inventario.index') : '#' }}"
-           onclick="{{ Route::has('inventario.index') ? 'return true' : 'proximamente(); return false' }}"
+        <a href="{{ route('inventario.index') }}"
            class="sidebar-link {{ request()->routeIs('inventario.*') ? 'active' : '' }}">
             <i class="fas fa-warehouse"></i> Inventario
         </a>
-        <a href="{{ Route::has('categorias.index') ? route('categorias.index') : '#' }}"
-           onclick="{{ Route::has('categorias.index') ? 'return true' : 'proximamente(); return false' }}"
+
+        @if(Auth::user()->esAdmin())
+        <a href="{{ route('categorias.index') }}"
            class="sidebar-link {{ request()->routeIs('categorias.*') ? 'active' : '' }}">
             <i class="fas fa-tags"></i> Categorías
         </a>
+        @endif
 
         <div class="sidebar-section">Ventas</div>
 
-        <a href="{{ Route::has('ventas.index') ? route('ventas.index') : '#' }}"
-           onclick="{{ Route::has('ventas.index') ? 'return true' : 'proximamente(); return false' }}"
+        <a href="{{ route('ventas.index') }}"
            class="sidebar-link {{ request()->routeIs('ventas.*') ? 'active' : '' }}">
             <i class="fas fa-cash-register"></i> Ventas
         </a>
-        <a href="{{ Route::has('reportes.index') ? route('reportes.index') : '#' }}"
-           onclick="{{ Route::has('reportes.index') ? 'return true' : 'proximamente(); return false' }}"
+        <a href="{{ route('reportes.index') }}"
            class="sidebar-link {{ request()->routeIs('reportes.*') ? 'active' : '' }}">
             <i class="fas fa-chart-bar"></i> Reportes
         </a>
 
         @if(Auth::user()->esAdmin())
         <div class="sidebar-section">Administración</div>
-        <a href="{{ Route::has('usuarios.index') ? route('usuarios.index') : '#' }}"
-           onclick="{{ Route::has('usuarios.index') ? 'return true' : 'proximamente(); return false' }}"
+        <a href="{{ route('usuarios.index') }}"
            class="sidebar-link {{ request()->routeIs('usuarios.*') ? 'active' : '' }}">
             <i class="fas fa-users-cog"></i> Usuarios
         </a>

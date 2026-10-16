@@ -149,9 +149,11 @@
             </a>
         @endif
     </div>
+    @if(Auth::user()->esAdmin())
     <button type="button" class="btn-nuevo" onclick="abrirModalCrear()">
         <i class="fas fa-plus"></i> Nuevo producto
     </button>
+    @endif
 </div>
 </form>
 
@@ -207,6 +209,7 @@
                     </td>
                     <td>
                         <div style="display:flex; gap:5px; flex-wrap:wrap;">
+                            @if(Auth::user()->esAdmin())
                             {{-- Editar --}}
                             <button class="btn-accion btn-editar"
                                 onclick="abrirModalEditar(
@@ -240,6 +243,9 @@
                                     <i class="fas fa-trash"></i>
                                 </button>
                             </form>
+                            @else
+                            <span style="font-size:.8rem; color:#9CA3AF; font-style:italic;">Solo lectura</span>
+                            @endif
                         </div>
                     </td>
                 </tr>
