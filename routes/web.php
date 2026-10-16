@@ -5,6 +5,7 @@ use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\CategoriaController;
 use App\Http\Controllers\ProductoController;
 
+use App\Http\Controllers\ReporteController;
 use App\Http\Controllers\InventarioController;
 use App\Http\Controllers\VentaController;
 
@@ -38,7 +39,10 @@ Route::middleware(['auth', 'no-cache'])->group(function () {
     Route::patch('ventas/{venta}/anular', [VentaController::class, 'anular'])
         ->name('ventas.anular');
 
-    // Aquí irán: reportes …
+    // Reportes — admin y empleado
+    Route::get('/reportes', [ReporteController::class, 'index'])->name('reportes.index');
+
+    // Aquí irán: …
 
 });
 
