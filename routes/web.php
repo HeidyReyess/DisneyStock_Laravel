@@ -2,6 +2,7 @@
 
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\CategoriaController;
 
 // ── Pública ───────────────────────────────────────────────
 Route::get('/', fn() => view('welcome'))->name('home');
@@ -26,6 +27,10 @@ Route::middleware(['auth', 'no-cache'])->group(function () {
 // ═══════════════════════════════════════════════════════════
 Route::middleware(['auth', 'role:administrador', 'no-cache'])->group(function () {
 
-    // Aquí irán: usuarios, categorías …
+    // Categorías (sin create/edit — formularios en modales inline)
+    Route::resource('categorias', CategoriaController::class)
+        ->except(['create', 'edit', 'show']);
+
+    // Aquí irán: usuarios …
 
 });
