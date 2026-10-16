@@ -44,8 +44,10 @@
     /* ── Imagen miniatura ── */
     .img-thumb {
         width:42px; height:42px; border-radius:9px; object-fit:cover;
-        border:1px solid #EDE9FE;
+        border:1px solid #EDE9FE; cursor:zoom-in;
+        transition:transform .2s, box-shadow .2s;
     }
+    .img-thumb:hover { transform:scale(1.08); box-shadow:0 4px 16px rgba(74,29,150,.18); }
     .img-placeholder {
         width:42px; height:42px; border-radius:9px;
         background:#F5F3FF; border:1px solid #EDE9FE;
@@ -174,7 +176,10 @@
                 <tr>
                     <td>
                         @if($prod->imagen)
-                            <img src="{{ asset('storage/' . $prod->imagen) }}" class="img-thumb" alt="{{ $prod->nombre }}">
+                            <img src="{{ asset('storage/' . $prod->imagen) }}"
+                                 class="img-thumb"
+                                 alt="{{ $prod->nombre }}"
+                                 onclick="verImagen('{{ asset('storage/' . $prod->imagen) }}', '{{ addslashes($prod->nombre) }}')">
                         @else
                             <div class="img-placeholder"><i class="fas fa-image"></i></div>
                         @endif
@@ -453,4 +458,26 @@
         abrirModalCrear();
     @endif
 </script>
+
+{{-- ═══════════════════════════════
+     MODAL VER IMAGEN
+════════════════════════════════ --}}
+<div class="modal-overlay" id="modalImagen">
+    <div class="modal-backdrop" onclick="cerrarModal('modalImagen')"></div>
+    <div class="modal-box" style="max-width:500px; padding:20px; text-align:center;">
+        <button class="modal-close" onclick="cerrarModal('modalImagen')"><i class="fas fa-xmark"></i></button>
+        <div style="font-family:'Outfit',sans-serif; font-weight:700; font-size:1rem; color:#1E1B4B; margin-bottom:14px;" id="modalImagenNombre"></div>
+        <img id="modalImagenSrc" src="" alt=""
+            style="max-width:100%; max-height:70vh; border-radius:12px; object-fit:contain; border:1px solid #EDE9FE; box-shadow:0 4px 24px rgba(74,29,150,.12);">
+    </div>
+</div>
+
+<script>
+    function verImagen(url, nombre) {
+        document.getElementById('modalImagenSrc').src    = url;
+        document.getElementById('modalImagenNombre').textContent = nombre;
+        document.getElementById('modalImagen').classList.add('open');
+    }
+</script>
+
 @endsection
