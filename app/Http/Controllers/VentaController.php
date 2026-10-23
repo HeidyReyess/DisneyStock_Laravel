@@ -168,6 +168,9 @@ class VentaController extends Controller
     // PATCH /ventas/{venta}/anular
     public function anular(Venta $venta)
     {
+        // [4] Doble protección: ruta ya está en grupo admin, pero verificamos también aquí
+        if (!Auth::user()->esAdmin()) abort(403);
+
         if ($venta->estaAnulada()) {
             return redirect()->route('ventas.index')
                 ->with('error', 'Esta venta ya está anulada.');

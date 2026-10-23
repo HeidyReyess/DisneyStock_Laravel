@@ -23,7 +23,20 @@ class LoginController extends Controller
             'password.required' => 'El campo contraseña es obligatorio.',
         ]);
 
+        // Intentar autenticar con usuario y contraseña
         if (Auth::attempt(['usuario' => $credentials['usuario'], 'password' => $credentials['password']], $request->boolean('remember'))) {
+
+            // [2] Verificar que el usuario esté activo después de autenticar
+            if (Auth::user()->estado !== 'activo') {
+                Auth::logout();
+                $request->session()->invalidate();
+                $request->session()->regenerateToken();
+
+                return back()->withErrors([
+                    'usuario' => 'Tu usuario está desactivado. Comunícate con la administradora del sistema.',
+                ])->onlyInput('usuario');
+            }
+
             $request->session()->regenerate();
             return redirect()->intended('/dashboard');
         }

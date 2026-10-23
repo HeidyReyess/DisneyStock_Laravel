@@ -15,6 +15,7 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->alias([
             'role'     => \App\Http\Middleware\CheckRol::class,
             'no-cache' => \App\Http\Middleware\NoCache::class,
+            'activo'   => \App\Http\Middleware\CheckUsuarioActivo::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {

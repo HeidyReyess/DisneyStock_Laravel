@@ -41,7 +41,7 @@ class ProductoController extends Controller
 
         // [4][6][7] Validaciones actualizadas: enteros, mínimos, categoría obligatoria
         $request->validate([
-            'nombre'        => ['required', 'string', 'max:100'],
+            'nombre'        => ['required', 'string', 'max:255'],
             'precio_venta'  => ['required', 'integer', 'min:1'],
             'precio_compra' => ['required', 'integer', 'min:1'],
             'stock_inicial' => ['required', 'integer', 'min:0'],
@@ -52,7 +52,7 @@ class ProductoController extends Controller
             'imagen'        => ['nullable', 'image', 'mimes:jpg,jpeg,png,webp', 'max:2048'],
         ], [
             'nombre.required'         => 'El nombre del producto es obligatorio.',
-            'nombre.max'              => 'El nombre no puede superar 100 caracteres.',
+            'nombre.max'              => 'El nombre no puede superar 255 caracteres.',
             'precio_venta.required'   => 'El precio de venta es obligatorio.',
             'precio_venta.integer'    => 'El precio de venta debe ser un número entero.',
             'precio_venta.min'        => 'El precio de venta debe ser al menos 1.',
@@ -115,7 +115,7 @@ class ProductoController extends Controller
 
         // [4][6][7] Validaciones actualizadas
         $request->validate([
-            'nombre'        => ['required', 'string', 'max:100'],
+            'nombre'        => ['required', 'string', 'max:255'],
             'precio_venta'  => ['required', 'integer', 'min:1'],
             'precio_compra' => ['required', 'integer', 'min:1'],
             'stock_minimo'  => ['required', 'integer', 'min:1'],
@@ -125,7 +125,7 @@ class ProductoController extends Controller
             'imagen'        => ['nullable', 'image', 'mimes:jpg,jpeg,png,webp', 'max:2048'],
         ], [
             'nombre.required'        => 'El nombre del producto es obligatorio.',
-            'nombre.max'             => 'El nombre no puede superar 100 caracteres.',
+            'nombre.max'             => 'El nombre no puede superar 255 caracteres.',
             'precio_venta.required'  => 'El precio de venta es obligatorio.',
             'precio_venta.integer'   => 'El precio de venta debe ser un número entero.',
             'precio_venta.min'       => 'El precio de venta debe ser al menos 1.',

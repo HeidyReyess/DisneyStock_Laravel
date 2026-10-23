@@ -472,19 +472,14 @@
 
     @if($errors->any())
         @php
-            // Si la URL anterior tenía /productos/{id} es editar, si no es crear
-            $prevUrl = url()->previous();
-            $esEditar = preg_match('/\/productos\/\d+$/', $prevUrl);
-            preg_match('/\/productos\/(\d+)$/', $prevUrl, $matches);
-            $editId = $matches[1] ?? null;
+            // [13] Usar old('_edit_id') en vez de preg_match sobre la URL — más robusto
+            $editId = old('_edit_id');
         @endphp
-        @if($esEditar && $editId)
-            {{-- [8] Reabre modal editar con datos que se estaban escribiendo --}}
+        @if($editId)
+            {{-- Reabre modal editar con datos que se estaban escribiendo --}}
             document.addEventListener('DOMContentLoaded', function() {
-                const btn = document.querySelector('[onclick*="abrirModalEditar({{ $editId }}"]');
-                if (btn) btn.click();
-                // Restaurar valores del old() en el modal
                 document.getElementById('formEditar').action = '/productos/{{ $editId }}';
+                document.getElementById('edit_id').value = '{{ $editId }}';
                 @if(old('nombre'))
                     document.getElementById('edit_nombre').value  = '{{ addslashes(old('nombre')) }}';
                 @endif
@@ -503,7 +498,7 @@
                 document.getElementById('modalEditar').classList.add('open');
             });
         @else
-            {{-- [8] Reabre modal crear con datos que se estaban escribiendo --}}
+            {{-- Reabre modal crear con datos que se estaban escribiendo --}}
             abrirModalCrear();
         @endif
     @endif

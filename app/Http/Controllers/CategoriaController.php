@@ -58,7 +58,7 @@ class CategoriaController extends Controller
     {
         if ($categoria->tieneProductos()) {
             return redirect()->route('categorias.index')
-                ->with('error', "No se puede eliminar \"{$categoria->nombre_categoria}\": tiene productos asociados. Reasígnalos primero.");
+                ->with('error', 'No se puede eliminar una categoría que tiene productos asociados.');
         }
 
         $nombre = $categoria->nombre_categoria;

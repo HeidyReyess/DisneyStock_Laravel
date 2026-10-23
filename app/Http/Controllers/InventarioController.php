@@ -58,6 +58,8 @@ class InventarioController extends Controller
     // POST /inventario/movimiento  — solo entradas manuales
     public function movimiento(Request $request)
     {
+        // [3] Doble protección: ruta ya está en grupo admin, pero verificamos también aquí
+        if (!Auth::user()->esAdmin()) abort(403);
         $request->validate([
             'producto_id' => ['required', 'exists:productos,id'],
             'cantidad'    => ['required', 'integer', 'min:1'],

@@ -15,7 +15,9 @@ class AppServiceProvider extends ServiceProvider
         // Comparte $alertasStock con todas las vistas del layout sidebar.
         // Cuenta productos con stock_minimo > 0 y cantidad_stock <= stock_minimo.
         // Si la tabla no existe todavía, devuelve 0 sin lanzar error.
-        View::composer('layouts.sidebar', function ($view) {
+        // [12] Aplica $alertasStock a todas las vistas del panel (cualquier vista bajo admin.*)
+        // y al layout sidebar, para que esté disponible en cualquier vista que lo use
+        View::composer(['layouts.sidebar', 'admin.*', 'admin.*.*', 'admin.*.*.*'], function ($view) {
             try {
                 $alertasStock = DB::table('inventarios')
                     ->join('productos', 'productos.id', '=', 'inventarios.producto_id')
