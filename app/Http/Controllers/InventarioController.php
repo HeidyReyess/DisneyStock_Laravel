@@ -78,7 +78,10 @@ class InventarioController extends Controller
                 ->with('error', 'Este producto no tiene registro de inventario.');
         }
 
-        DB::transaction(function () use ($request, $producto) {
+        // Capturar el ID antes del closure — Auth::id() dentro del closure puede dar el campo usuario
+        $userId = Auth::user()->id;
+
+        DB::transaction(function () use ($request, $producto, $userId) {
             // Registrar movimiento
             MovimientoInventario::create([
                 'tipo_movimiento' => 'entrada',
@@ -87,7 +90,7 @@ class InventarioController extends Controller
                 'descripcion'     => $request->descripcion,
                 'proveedor'       => $request->proveedor,
                 'producto_id'     => $producto->id,
-                'user_id'         => Auth::id(),
+                'user_id'         => $userId,
             ]);
 
             // Sumar stock

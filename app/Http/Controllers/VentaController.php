@@ -65,8 +65,11 @@ class VentaController extends Controller
             return back()->with('error', 'Agrega al menos un producto a la venta.');
         }
 
+        // Capturar ID antes del closure — getAuthIdentifier() devuelve 'usuario' no el id numérico
+        $userId = Auth::user()->id;
+
         try {
-            DB::transaction(function () use ($items, $descuento) {
+            DB::transaction(function () use ($items, $descuento, $userId) {
                 $subtotal = 0;
                 foreach ($items as $it) {
                     $subtotal += (float)$it['precio'] * (int)$it['cantidad'];
@@ -81,7 +84,7 @@ class VentaController extends Controller
                     'descuento'   => $descuento,
                     'total'       => $total,
                     'estado'      => 'completada',
-                    'user_id'     => Auth::id(),
+                    'user_id'     => $userId,
                 ]);
 
                 $numFac = 'DS-' . str_pad($venta->id, 6, '0', STR_PAD_LEFT);
@@ -119,7 +122,7 @@ class VentaController extends Controller
                         'fecha'           => today(),
                         'descripcion'     => "Venta {$numFac}",
                         'producto_id'     => $pid,
-                        'user_id'         => Auth::id(),
+                        'user_id'         => $userId,
                         'venta_id'        => $venta->id,
                     ]);
 
@@ -176,8 +179,11 @@ class VentaController extends Controller
                 ->with('error', 'Esta venta ya está anulada.');
         }
 
+        // Capturar ID antes del closure
+        $userId = Auth::user()->id;
+
         try {
-            DB::transaction(function () use ($venta) {
+            DB::transaction(function () use ($venta, $userId) {
                 $venta->load('detalles');
 
                 foreach ($venta->detalles as $detalle) {
@@ -193,7 +199,7 @@ class VentaController extends Controller
                             'fecha'           => today(),
                             'descripcion'     => "Anulación de venta #{$venta->id}",
                             'producto_id'     => $detalle->producto_id,
-                            'user_id'         => Auth::id(),
+                            'user_id'         => $userId,
                             'venta_id'        => $venta->id,
                         ]);
 
