@@ -379,7 +379,7 @@
             '<i class="fas fa-spinner fa-spin" style="font-size:1.5rem; color:#C4B5FD;"></i>';
         document.getElementById('modalDetalle').classList.add('open');
 
-        fetch(`/ventas/${id}`, { headers: { 'X-Requested-With': 'XMLHttpRequest' } })
+        fetch(`{{ url('ventas') }}/${id}`, { headers: { 'X-Requested-With': 'XMLHttpRequest' } })
             .then(r => r.text())
             .then(html => document.getElementById('detalleContenido').innerHTML = html)
             .catch(() => document.getElementById('detalleContenido').innerHTML =
