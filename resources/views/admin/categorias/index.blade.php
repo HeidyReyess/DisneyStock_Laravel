@@ -143,7 +143,7 @@
             <tbody>
                 @forelse($categorias as $cat)
                 <tr>
-                    <td style="color:#9CA3AF; font-size:.8rem;">{{ $cat->id }}</td>
+                    <td style="color:#9CA3AF; font-size:.8rem;">{{ $loop->iteration }}</td>
                     <td style="font-weight:600; color:#1E1B4B;">{{ $cat->nombre_categoria }}</td>
                     <td style="color:#6B7280;">{{ $cat->descripcion ?? '—' }}</td>
                     <td>
@@ -162,7 +162,7 @@
                                   onsubmit="confirmarEliminar(event, '{{ addslashes($cat->nombre_categoria) }}', {{ $cat->productos_count }}); return false;">
                                 @csrf @method('DELETE')
                                 <button type="submit" class="btn-accion btn-eliminar"
-                                    {{ $cat->productos_count > 0 ? 'disabled title=Tiene productos asociados' : '' }}>
+                                    {{ $cat->productos_count > 0 ? 'disabled title="No se puede eliminar: tiene ' . $cat->productos_count . ' producto' . ($cat->productos_count === 1 ? '' : 's') . ' asociado' . ($cat->productos_count === 1 ? '' : 's') . '."' : '' }}>
                                     <i class="fas fa-trash"></i> Eliminar
                                 </button>
                             </form>

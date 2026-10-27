@@ -24,7 +24,7 @@ class CategoriaController extends Controller
             'nombre_categoria' => ['required', 'string', 'max:100', 'unique:categorias,nombre_categoria'],
             'descripcion'      => ['nullable', 'string', 'max:200'],
         ], [
-            'nombre_categoria.required' => 'El nombre de la categoría es obligatorio.',
+            'nombre_categoria.required' => 'El nombre es obligatorio.',
             'nombre_categoria.unique'   => 'Ya existe una categoría con ese nombre.',
             'nombre_categoria.max'      => 'El nombre no puede superar 100 caracteres.',
         ]);
@@ -42,7 +42,7 @@ class CategoriaController extends Controller
             'nombre_categoria' => ['required', 'string', 'max:100', "unique:categorias,nombre_categoria,{$categoria->id}"],
             'descripcion'      => ['nullable', 'string', 'max:200'],
         ], [
-            'nombre_categoria.required' => 'El nombre de la categoría es obligatorio.',
+            'nombre_categoria.required' => 'El nombre es obligatorio.',
             'nombre_categoria.unique'   => 'Ya existe una categoría con ese nombre.',
             'nombre_categoria.max'      => 'El nombre no puede superar 100 caracteres.',
         ]);
