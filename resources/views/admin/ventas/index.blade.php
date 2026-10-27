@@ -245,6 +245,9 @@
                     <input type="number" id="inputDescuento" min="0" step="100"
                         style="width:90px; padding:4px 8px; border:1.5px solid #E5E7EB; border-radius:7px; font-size:.85rem; margin-left:4px;"
                         placeholder="0" oninput="recalcularTotal()">
+                    <div id="descuentoError" style="display:none; font-size:.76rem; color:#EF4444; margin-top:3px; margin-left:4px;">
+                        <i class="fas fa-circle-exclamation"></i> <span id="descuentoErrorMsg"></span>
+                    </div>
                 </div>
                 <div>
                     <span style="font-size:.82rem; color:#6B7280; margin-right:6px;">Total:</span>
@@ -254,7 +257,8 @@
         </div>
 
         {{-- Form oculto para enviar al servidor --}}
-        <form method="POST" action="{{ route('ventas.store') }}" id="formVenta">
+        <form method="POST" action="{{ route('ventas.store') }}" id="formVenta"
+              onsubmit="return validarDescuento()">
             @csrf
             <input type="hidden" name="items" id="inputItems" value="[]">
             <input type="hidden" name="descuento" id="inputDescuentoHidden" value="0">
@@ -287,6 +291,7 @@
 <script>
     // ── Carrito ──────────────────────────────────────────────
     let carrito = [];
+    const DESCUENTO_MAX_PCT = {{ $descuentoMaxPct }};
 
     function agregarAlCarrito() {
         const sel   = document.getElementById('selectProducto');
@@ -375,6 +380,46 @@
         document.getElementById('inputItems').value = JSON.stringify(
             carrito.map(i => ({ id: i.id, cantidad: i.cantidad, precio: i.precio }))
         );
+        // Limpiar error de descuento en tiempo real
+        mostrarErrorDescuento('');
+    }
+
+    function mostrarErrorDescuento(msg) {
+        const div  = document.getElementById('descuentoError');
+        const span = document.getElementById('descuentoErrorMsg');
+        const inp  = document.getElementById('inputDescuento');
+        if (msg) {
+            span.textContent = msg;
+            div.style.display = 'block';
+            inp.style.borderColor = '#EF4444';
+        } else {
+            div.style.display = 'none';
+            inp.style.borderColor = '#E5E7EB';
+        }
+    }
+
+    function validarDescuento() {
+        const subtotal  = carrito.reduce((s, i) => s + i.precio * i.cantidad, 0);
+        const descuento = parseFloat(document.getElementById('inputDescuento').value) || 0;
+
+        if (descuento > subtotal) {
+            mostrarErrorDescuento('El descuento no puede ser mayor que el subtotal de la venta.');
+            return false;
+        }
+
+        if (DESCUENTO_MAX_PCT < 100) {
+            const maxValor = subtotal * (DESCUENTO_MAX_PCT / 100);
+            if (descuento > maxValor) {
+                const maxFmt = new Intl.NumberFormat('es-CO', { minimumFractionDigits: 0 }).format(maxValor);
+                mostrarErrorDescuento(
+                    `El descuento no puede superar el ${DESCUENTO_MAX_PCT}% del subtotal (máximo $ ${maxFmt}).`
+                );
+                return false;
+            }
+        }
+
+        mostrarErrorDescuento('');
+        return true;
     }
 
     function fmt(n) {

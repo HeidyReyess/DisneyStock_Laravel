@@ -47,6 +47,9 @@ class VentaController extends Controller
             ? \App\Models\User::orderBy('nombre')->get()
             : collect();
 
+        // Descuento máximo para validación JS en el modal de ventas
+        $descuentoMaxPct = (float) \App\Models\Configuracion::valor('descuento_maximo_porcentaje', 100);
+
         // Métricas rápidas
         $ventasHoy   = Venta::whereDate('fecha_venta', today())
             ->where('estado', '!=', 'anulada')->count();
@@ -54,7 +57,7 @@ class VentaController extends Controller
             ->where('estado', '!=', 'anulada')->sum('total');
 
         return view('admin.ventas.index', compact(
-            'ventas', 'productos', 'ventasHoy', 'ingresosHoy', 'empleados'
+            'ventas', 'productos', 'ventasHoy', 'ingresosHoy', 'empleados', 'descuentoMaxPct'
         ));
     }
 
@@ -75,10 +78,13 @@ class VentaController extends Controller
             return back()->with('error', 'Agrega al menos un producto a la venta.');
         }
 
-        // Calcular subtotal anticipado para validar el descuento
+        // Calcular subtotal anticipado usando precios de la BD para validar el descuento
         $subtotalPreview = 0;
         foreach ($items as $it) {
-            $subtotalPreview += (float)$it['precio'] * (int)$it['cantidad'];
+            $prod = Producto::find((int)$it['id']);
+            if ($prod) {
+                $subtotalPreview += (float)$prod->precio_venta * (int)$it['cantidad'];
+            }
         }
 
         // Validar descuento máximo desde configuración
@@ -86,10 +92,10 @@ class VentaController extends Controller
         $descMaxValor = $subtotalPreview * ($descMaxPct / 100);
 
         if ($descuento > $subtotalPreview) {
-            return back()->with('error', 'El descuento no puede ser mayor que el subtotal de la venta.');
+            return back()->withInput()->with('error', 'El descuento no puede ser mayor que el subtotal de la venta.');
         }
         if ($descMaxPct < 100 && $descuento > $descMaxValor) {
-            return back()->with('error', "El descuento no puede superar el {$descMaxPct}% del subtotal (máximo $ " . number_format($descMaxValor, 0, ',', '.') . ").");
+            return back()->withInput()->with('error', "El descuento no puede superar el {$descMaxPct}% del subtotal (máximo $ " . number_format($descMaxValor, 0, ',', '.') . ").");
         }
 
         // Capturar ID antes del closure — getAuthIdentifier() devuelve 'usuario' no el id numérico
@@ -98,8 +104,15 @@ class VentaController extends Controller
         try {
             DB::transaction(function () use ($items, $descuento, $userId) {
                 $subtotal = 0;
+                $preciosBD = [];
+
+                // Obtener precios desde la BD antes de calcular — no confiar en el precio del formulario
                 foreach ($items as $it) {
-                    $subtotal += (float)$it['precio'] * (int)$it['cantidad'];
+                    $pid    = (int) $it['id'];
+                    $prod   = Producto::findOrFail($pid);
+                    $precio = (float) $prod->precio_venta;  // precio autorizado
+                    $preciosBD[$pid] = $precio;
+                    $subtotal += $precio * (int)$it['cantidad'];
                 }
 
                 // IVA desde configuración (sobre subtotal - descuento)
@@ -128,7 +141,7 @@ class VentaController extends Controller
                 foreach ($items as $it) {
                     $pid    = (int) $it['id'];
                     $cant   = (int) $it['cantidad'];
-                    $precio = (float) $it['precio'];
+                    $precio = $preciosBD[$pid];   // precio de la BD, no del formulario
 
                     $producto = Producto::with('inventario')->lockForUpdate()->findOrFail($pid);
                     $inv      = $producto->inventario;
@@ -137,7 +150,7 @@ class VentaController extends Controller
                         throw new \Exception("Stock insuficiente para: {$producto->nombre}");
                     }
 
-                    // Línea de detalle
+                    // Línea de detalle con precio de la BD
                     DetalleVenta::create([
                         'venta_id'        => $venta->id,
                         'producto_id'     => $pid,
