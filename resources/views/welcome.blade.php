@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>DisneyStock — Sistema de Gestión para Variedades Disney</title>
+    <link rel="icon" type="image/png" href="{{ asset('img/LogoSoloo.png') }}">
     <meta name="description" content="Sistema web de gestión de inventario y ventas para Variedades Disney.">
 
     <link rel="preconnect" href="https://fonts.googleapis.com">

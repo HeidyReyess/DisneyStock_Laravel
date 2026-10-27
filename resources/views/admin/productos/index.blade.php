@@ -323,7 +323,7 @@
                     {{-- [7] Categoría obligatoria --}}
                     <label class="form-label">Categoría <span style="color:#EF4444">*</span></label>
                     <select name="categoria_id" class="form-select {{ $errors->has('categoria_id') ? 'is-invalid' : '' }}">
-                        <option value="">Selecciona una categoría...</option>
+                        <option value="" disabled>Selecciona una categoría...</option>
                         @foreach($categorias as $cat)
                             <option value="{{ $cat->id }}" {{ old('categoria_id') == $cat->id ? 'selected' : '' }}>
                                 {{ $cat->nombre_categoria }}
@@ -365,50 +365,68 @@
         <button class="modal-close" onclick="cerrarModal('modalEditar')"><i class="fas fa-xmark"></i></button>
         <div class="modal-title"><i class="fas fa-pen"></i> Editar producto</div>
 
-        <form method="POST" id="formEditar" action="" enctype="multipart/form-data">
+        <form method="POST" id="formEditar" action="{{ $productoEditando ? route('productos.update', $productoEditando) : '' }}" enctype="multipart/form-data">
             @csrf @method('PUT')
             {{-- [8] Campo oculto para saber qué producto se estaba editando si hay error --}}
-            <input type="hidden" id="edit_id" name="_edit_id" value="">
+            <input type="hidden" id="edit_id" name="_edit_id" value="{{ $productoEditando?->id ?? '' }}">
             <div class="form-grid">
                 <div class="form-group full">
                     <label class="form-label">Nombre <span style="color:#EF4444">*</span></label>
-                    <input type="text" id="edit_nombre" name="nombre" class="form-input" maxlength="255" autocomplete="off">
+                    <input type="text" id="edit_nombre" name="nombre" class="form-input {{ $errors->has('nombre') ? 'is-invalid' : '' }}" maxlength="255" autocomplete="off"
+                        value="{{ old('nombre', $productoEditando?->nombre ?? '') }}">
+                    @error('nombre') <div class="invalid-msg"><i class="fas fa-circle-exclamation"></i> {{ $message }}</div> @enderror
                 </div>
                 <div class="form-group">
                     <label class="form-label">Precio venta <span style="color:#EF4444">*</span></label>
                     {{-- [4] step="1", valor entero en editar --}}
-                    <input type="number" id="edit_pventa" name="precio_venta" class="form-input" min="1" step="1">
+                    <input type="number" id="edit_pventa" name="precio_venta" class="form-input {{ $errors->has('precio_venta') ? 'is-invalid' : '' }}" min="1" step="1"
+                        value="{{ old('precio_venta', $productoEditando?->precio_venta ?? '') }}">
+                    @error('precio_venta') <div class="invalid-msg"><i class="fas fa-circle-exclamation"></i> {{ $message }}</div> @enderror
                 </div>
                 <div class="form-group">
                     <label class="form-label">Precio compra <span style="color:#EF4444">*</span></label>
-                    <input type="number" id="edit_pcompra" name="precio_compra" class="form-input" min="1" step="1">
+                    <input type="number" id="edit_pcompra" name="precio_compra" class="form-input {{ $errors->has('precio_compra') ? 'is-invalid' : '' }}" min="1" step="1"
+                        value="{{ old('precio_compra', $productoEditando?->precio_compra ?? '') }}">
+                    @error('precio_compra') <div class="invalid-msg"><i class="fas fa-circle-exclamation"></i> {{ $message }}</div> @enderror
                 </div>
                 <div class="form-group">
                     <label class="form-label">Stock mínimo <span style="color:#EF4444">*</span></label>
-                    <input type="number" id="edit_minimo" name="stock_minimo" class="form-input" min="1" step="1">
+                    <input type="number" id="edit_minimo" name="stock_minimo" class="form-input {{ $errors->has('stock_minimo') ? 'is-invalid' : '' }}" min="1" step="1"
+                        value="{{ old('stock_minimo', $productoEditando?->stockMinimo() ?? '') }}">
+                    @error('stock_minimo') <div class="invalid-msg"><i class="fas fa-circle-exclamation"></i> {{ $message }}</div> @enderror
                 </div>
                 <div class="form-group">
                     <label class="form-label">Fecha de ingreso <span style="color:#EF4444">*</span></label>
-                    <input type="date" id="edit_fecha" name="fecha_ingreso" class="form-input">
+                    <input type="date" id="edit_fecha" name="fecha_ingreso" class="form-input {{ $errors->has('fecha_ingreso') ? 'is-invalid' : '' }}"
+                        value="{{ old('fecha_ingreso', $productoEditando?->fecha_ingreso?->format('Y-m-d') ?? '') }}">
+                    @error('fecha_ingreso') <div class="invalid-msg"><i class="fas fa-circle-exclamation"></i> {{ $message }}</div> @enderror
                 </div>
                 <div class="form-group">
-                    <label class="form-label">Categoría</label>
-                    <select id="edit_categoria" name="categoria_id" class="form-select">
-                        <option value="">Sin categoría</option>
+                    <label class="form-label">Categoría <span style="color:#EF4444">*</span></label>
+                    <select id="edit_categoria" name="categoria_id" class="form-select {{ $errors->has('categoria_id') ? 'is-invalid' : '' }}">
+                        <option value="" disabled>Selecciona una categoría...</option>
                         @foreach($categorias as $cat)
-                            <option value="{{ $cat->id }}">{{ $cat->nombre_categoria }}</option>
+                            <option value="{{ $cat->id }}" {{ old('categoria_id', $productoEditando?->categoria_id ?? '') == $cat->id ? 'selected' : '' }}>
+                                {{ $cat->nombre_categoria }}
+                            </option>
                         @endforeach
                     </select>
+                    @error('categoria_id') <div class="invalid-msg"><i class="fas fa-circle-exclamation"></i> {{ $message }}</div> @enderror
                 </div>
                 <div class="form-group full">
                     <label class="form-label">Proveedor</label>
-                    <input type="text" id="edit_proveedor" name="proveedor" class="form-input" maxlength="200">
+                    <input type="text" id="edit_proveedor" name="proveedor" class="form-input" maxlength="200"
+                        value="{{ old('proveedor', $productoEditando?->proveedor ?? '') }}">
                 </div>
                 <div class="form-group full">
                     <label class="form-label">Nueva imagen <span style="font-size:.76rem; color:#9CA3AF;">(deja vacío para conservar la actual)</span></label>
                     <input type="file" name="imagen" class="form-input" accept="image/*"
                         onchange="previewImagen(this, 'previewEditar')">
-                    <img id="previewEditarActual" class="img-preview" alt="Imagen actual" style="display:block;">
+                    @if($productoEditando && $productoEditando->imagen)
+                        <img id="previewEditarActual" class="img-preview" alt="Imagen actual" style="display:block;" src="{{ asset('storage/' . $productoEditando->imagen) }}">
+                    @else
+                        <img id="previewEditarActual" class="img-preview" alt="Imagen actual" style="display:none;">
+                    @endif
                     <img id="previewEditar" class="img-preview" alt="Nueva imagen">
                 </div>
             </div>
@@ -476,30 +494,15 @@
             $editId = old('_edit_id');
         @endphp
         @if($editId)
-            {{-- Reabre modal editar con datos que se estaban escribiendo --}}
+            {{-- Solo abre el modal; los campos ya están llenos desde Blade --}}
             document.addEventListener('DOMContentLoaded', function() {
-                document.getElementById('formEditar').action = '/productos/{{ $editId }}';
-                document.getElementById('edit_id').value = '{{ $editId }}';
-                @if(old('nombre'))
-                    document.getElementById('edit_nombre').value  = '{{ addslashes(old('nombre')) }}';
-                @endif
-                @if(old('precio_venta'))
-                    document.getElementById('edit_pventa').value  = parseInt('{{ old('precio_venta') }}');
-                @endif
-                @if(old('precio_compra'))
-                    document.getElementById('edit_pcompra').value = parseInt('{{ old('precio_compra') }}');
-                @endif
-                @if(old('stock_minimo'))
-                    document.getElementById('edit_minimo').value  = parseInt('{{ old('stock_minimo') }}');
-                @endif
-                @if(old('fecha_ingreso'))
-                    document.getElementById('edit_fecha').value   = '{{ old('fecha_ingreso') }}';
-                @endif
                 document.getElementById('modalEditar').classList.add('open');
             });
         @else
-            {{-- Reabre modal crear con datos que se estaban escribiendo --}}
-            abrirModalCrear();
+            {{-- Reabre modal crear solo si se envió el formulario de crear (stock_inicial es exclusivo de crear) --}}
+            @if(old('stock_inicial') !== null)
+                abrirModalCrear();
+            @endif
         @endif
     @endif
 </script>

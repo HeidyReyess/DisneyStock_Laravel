@@ -31,7 +31,13 @@ class ProductoController extends Controller
         $productos  = $query->get();
         $categorias = Categoria::orderBy('nombre_categoria')->get();
 
-        return view('admin.productos.index', compact('productos', 'categorias'));
+        // Si viene de un error de validación al editar, buscar el producto
+        $productoEditando = null;
+        if (old('_edit_id')) {
+            $productoEditando = Producto::with('inventario')->find(old('_edit_id'));
+        }
+
+        return view('admin.productos.index', compact('productos', 'categorias', 'productoEditando'));
     }
 
     // POST /productos
