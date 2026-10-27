@@ -115,6 +115,12 @@
     </div>
 </form>
 
+{{-- Mensaje de rango de fechas inválido --}}
+<div id="errorRangoFechas" class="alert-error" style="margin-bottom:20px; {{ !($rangoInvalido ?? false) ? 'display:none;' : '' }}">
+    <i class="fas fa-circle-xmark"></i>
+    <span>Rango de fechas inválido.</span>
+</div>
+
 {{-- Tabla --}}
 <div class="card">
     <div class="card-header">
@@ -198,3 +204,20 @@
     @endif
 </div>
 @endsection
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const formHistorial = document.querySelector('form[action="{{ route('inventario.historial') }}"]');
+    if (formHistorial) {
+        formHistorial.addEventListener('submit', function(e) {
+            const desde = formHistorial.querySelector('input[name="desde"]')?.value;
+            const hasta = formHistorial.querySelector('input[name="hasta"]')?.value;
+            const errorMsg = document.getElementById('errorRangoFechas');
+            if (desde && hasta && desde > hasta) {
+                e.preventDefault();
+                if (errorMsg) errorMsg.style.display = 'flex';
+            }
+        });
+    }
+});
+</script>

@@ -6,8 +6,9 @@
 @section('content')
 <style>
     /* ── Métricas ── */
-    .metrics-row { display:grid; grid-template-columns:repeat(auto-fit,minmax(180px,1fr)); gap:16px; margin-bottom:22px; }
-    .metric-card { background:#fff; border-radius:12px; padding:18px 20px; border:1px solid #EDE9FE; box-shadow:0 2px 8px rgba(74,29,150,.05); display:flex; align-items:center; gap:14px; }
+    .metrics-header { display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:16px; margin-bottom:20px; }
+    .metrics-group { display:flex; gap:14px; flex-wrap:wrap; align-items:center; }
+    .metric-card { background:#fff; border-radius:12px; padding:18px 20px; border:1px solid #EDE9FE; box-shadow:0 2px 8px rgba(74,29,150,.05); display:flex; align-items:center; gap:14px; min-width:200px; }
     .metric-icon { width:44px; height:44px; border-radius:12px; display:flex; align-items:center; justify-content:center; font-size:1.1rem; flex-shrink:0; }
     .metric-icon.purple { background:#EDE9FE; color:#7C3AED; }
     .metric-icon.green  { background:#D1FAE5; color:#059669; }
@@ -85,30 +86,35 @@
     .qty-input:focus { outline:none; border-color:#7C3AED; }
 </style>
 
-{{-- Métricas rápidas --}}
-<div class="metrics-row">
-    <div class="metric-card">
-        <div class="metric-icon purple"><i class="fas fa-cash-register"></i></div>
-        <div>
-            <div class="metric-val">{{ $ventasHoy }}</div>
-            <div class="metric-lbl">Ventas hoy</div>
+{{-- Métricas rápidas y botón Nueva venta --}}
+<div class="metrics-header">
+    <div class="metrics-group">
+        <div class="metric-card">
+            <div class="metric-icon purple"><i class="fas fa-cash-register"></i></div>
+            <div>
+                <div class="metric-val">{{ $ventasHoy }}</div>
+                <div class="metric-lbl">Ventas hoy</div>
+            </div>
+        </div>
+        <div class="metric-card">
+            <div class="metric-icon green"><i class="fas fa-dollar-sign"></i></div>
+            <div>
+                <div class="metric-val">$ {{ number_format($ingresosHoy, 0, ',', '.') }}</div>
+                <div class="metric-lbl">Ingresos hoy</div>
+            </div>
         </div>
     </div>
-    <div class="metric-card">
-        <div class="metric-icon green"><i class="fas fa-dollar-sign"></i></div>
-        <div>
-            <div class="metric-val">$ {{ number_format($ingresosHoy, 0, ',', '.') }}</div>
-            <div class="metric-lbl">Ingresos hoy</div>
-        </div>
-    </div>
+    <button type="button" class="btn-nuevo" onclick="document.getElementById('modalNuevaVenta').classList.add('open')">
+        <i class="fas fa-plus"></i> Nueva venta
+    </button>
 </div>
 
 {{-- Toolbar --}}
-<form method="GET" action="{{ route('ventas.index') }}">
+<form method="GET" action="{{ route('ventas.index') }}" id="formFiltroVentas">
 <div class="toolbar">
     <div class="filters">
-        <input type="date" name="desde" class="filter-input" value="{{ request('desde') }}" title="Desde">
-        <input type="date" name="hasta" class="filter-input" value="{{ request('hasta') }}" title="Hasta">
+        <input type="date" name="desde" id="filtroDesde" class="filter-input" value="{{ request('desde') }}" title="Desde">
+        <input type="date" name="hasta" id="filtroHasta" class="filter-input" value="{{ request('hasta') }}" title="Hasta">
         <select name="estado" class="filter-input" style="min-width:130px;">
             <option value="">Todos los estados</option>
             <option value="completada" {{ request('estado') === 'completada' ? 'selected' : '' }}>Completadas</option>
@@ -123,19 +129,38 @@
                 </option>
             @endforeach
         </select>
+        <select name="producto_id" class="filter-input" style="min-width:160px;">
+            <option value="">Todos los productos</option>
+            @foreach($productosFiltro as $prod)
+                <option value="{{ $prod->id }}" {{ request('producto_id') == $prod->id ? 'selected' : '' }}>
+                    {{ $prod->nombre }}
+                </option>
+            @endforeach
+        </select>
+        <select name="proveedor" class="filter-input" style="min-width:150px;">
+            <option value="">Todos los proveedores</option>
+            @foreach($proveedores as $prov)
+                <option value="{{ $prov }}" {{ request('proveedor') == $prov ? 'selected' : '' }}>
+                    {{ $prov }}
+                </option>
+            @endforeach
+        </select>
         @endif
         <button type="submit" class="btn-filtrar"><i class="fas fa-filter"></i> Filtrar</button>
-        @if(request()->hasAny(['desde','hasta','estado','empleado_id']))
+        @if(request()->hasAny(['desde','hasta','estado','empleado_id','producto_id','proveedor']))
             <a href="{{ route('ventas.index') }}" class="btn-filtrar" style="text-decoration:none;">
                 <i class="fas fa-xmark"></i> Limpiar
             </a>
         @endif
     </div>
-    <button type="button" class="btn-nuevo" onclick="document.getElementById('modalNuevaVenta').classList.add('open')">
-        <i class="fas fa-plus"></i> Nueva venta
-    </button>
 </div>
 </form>
+
+{{-- Mensaje de rango de fechas inválido --}}
+<div id="errorRangoFechas" class="alert-error" style="margin-bottom:20px; {{ !($rangoInvalido ?? false) ? 'display:none;' : '' }}">
+    <i class="fas fa-circle-xmark"></i>
+    <span>Rango de fechas inválido.</span>
+</div>
 
 {{-- Tabla ventas --}}
 <div class="card">
@@ -143,7 +168,7 @@
         <table>
             <thead>
                 <tr>
-                    <th>Factura</th>
+                    <th>Comprobante</th>
                     <th>Fecha</th>
                     <th>Vendedor</th>
                     <th>Subtotal</th>
@@ -447,5 +472,22 @@
             cerrarModal('modalDetalle');
         }
     });
+
+    const formFiltroVentas = document.getElementById('formFiltroVentas');
+    if (formFiltroVentas) {
+        formFiltroVentas.addEventListener('submit', function(e) {
+            const desde = document.getElementById('filtroDesde')?.value;
+            const hasta = document.getElementById('filtroHasta')?.value;
+            const errorMsg = document.getElementById('errorRangoFechas');
+            if (desde && hasta && desde > hasta) {
+                e.preventDefault();
+                if (errorMsg) errorMsg.style.display = 'flex';
+            }
+        });
+    }
+
+    @if(session('comprobante_url'))
+    window.open('{{ session('comprobante_url') }}', '_blank');
+    @endif
 </script>
 @endsection

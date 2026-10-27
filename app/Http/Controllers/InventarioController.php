@@ -68,6 +68,19 @@ class InventarioController extends Controller
         if ($request->filled('tipo')) {
             $query->where('tipo_movimiento', $request->tipo);
         }
+        // Validar rango de fechas
+        $rangoInvalido = $request->filled('desde') && $request->filled('hasta')
+            && $request->desde > $request->hasta;
+
+        $productosSelect = Producto::orderBy('nombre')->get();
+
+        if ($rangoInvalido) {
+            $movimientos = MovimientoInventario::whereRaw('1 = 0')->paginate(20)->withQueryString();
+            return view('admin.inventario.historial', compact(
+                'movimientos', 'productosSelect'
+            ) + ['rangoInvalido' => true]);
+        }
+
         if ($request->filled('desde')) {
             $query->whereDate('fecha', '>=', $request->desde);
         }
@@ -76,11 +89,10 @@ class InventarioController extends Controller
         }
 
         $movimientos     = $query->paginate(20)->withQueryString();
-        $productosSelect = Producto::orderBy('nombre')->get();
 
         return view('admin.inventario.historial', compact(
             'movimientos', 'productosSelect'
-        ));
+        ) + ['rangoInvalido' => false]);
     }
 
     // POST /inventario/movimiento  — solo entradas manuales

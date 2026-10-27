@@ -84,26 +84,61 @@
     .stock-bar-fill { height:5px; border-radius:4px; }
     .stock-bar-fill.ok  { background:#7C3AED; }
     .stock-bar-fill.low { background:#EF4444; }
+
+    /* ── Header actions y exportación ── */
+    .header-actions { display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:14px; margin-bottom:20px; }
+    .btn-export {
+        display:inline-flex; align-items:center; gap:7px; padding:9px 16px; border-radius:10px;
+        font-family:'Outfit',sans-serif; font-size:.86rem; font-weight:700; text-decoration:none;
+        transition:all .2s; cursor:pointer; white-space:nowrap;
+    }
+    .btn-export-pdf {
+        background:#FEE2E2; color:#991B1B; border:1.5px solid #FECACA;
+    }
+    .btn-export-pdf:hover {
+        background:#FECACA; color:#7F1D1D;
+    }
+    .btn-export-excel {
+        background:#D1FAE5; color:#065F46; border:1.5px solid #A7F3D0;
+    }
+    .btn-export-excel:hover {
+        background:#A7F3D0; color:#064E3B;
+    }
 </style>
 
-{{-- Tabs de tipo de reporte --}}
-<div class="tabs">
-    <a href="{{ route('reportes.index', ['tipo' => 'ventas',     'periodo' => $periodo]) }}"
-       class="tab {{ $tipo === 'ventas'     ? 'active' : '' }}">
-        <i class="fas fa-receipt"></i> Ventas
-    </a>
-    <a href="{{ route('reportes.index', ['tipo' => 'inventario', 'periodo' => $periodo]) }}"
-       class="tab {{ $tipo === 'inventario' ? 'active' : '' }}">
-        <i class="fas fa-boxes-stacked"></i> Inventario
-    </a>
-    <a href="{{ route('reportes.index', ['tipo' => 'stock_bajo', 'periodo' => $periodo]) }}"
-       class="tab {{ $tipo === 'stock_bajo' ? 'active' : '' }}">
-        <i class="fas fa-triangle-exclamation"></i> Stock bajo
-    </a>
-    <a href="{{ route('reportes.index', ['tipo' => 'movimientos','periodo' => $periodo]) }}"
-       class="tab {{ $tipo === 'movimientos'? 'active' : '' }}">
-        <i class="fas fa-clock-rotate-left"></i> Movimientos
-    </a>
+{{-- Barra superior: Tabs y botones de exportación --}}
+<div class="header-actions">
+    <div class="tabs" style="margin-bottom:0;">
+        <a href="{{ route('reportes.index', array_merge(request()->query(), ['tipo' => 'ventas'])) }}"
+           class="tab {{ $tipo === 'ventas'     ? 'active' : '' }}">
+            <i class="fas fa-receipt"></i> Ventas
+        </a>
+        <a href="{{ route('reportes.index', array_merge(request()->query(), ['tipo' => 'inventario'])) }}"
+           class="tab {{ $tipo === 'inventario' ? 'active' : '' }}">
+            <i class="fas fa-boxes-stacked"></i> Inventario
+        </a>
+        <a href="{{ route('reportes.index', array_merge(request()->query(), ['tipo' => 'stock_bajo'])) }}"
+           class="tab {{ $tipo === 'stock_bajo' ? 'active' : '' }}">
+            <i class="fas fa-triangle-exclamation"></i> Stock bajo
+        </a>
+        <a href="{{ route('reportes.index', array_merge(request()->query(), ['tipo' => 'movimientos'])) }}"
+           class="tab {{ $tipo === 'movimientos'? 'active' : '' }}">
+            <i class="fas fa-clock-rotate-left"></i> Movimientos
+        </a>
+    </div>
+
+    @if(Auth::user()->esAdmin())
+    <div style="display:flex; gap:10px; align-items:center; flex-wrap:wrap;">
+        <a href="{{ route('reportes.export.pdf', array_merge(['tipo' => $tipo], request()->query())) }}"
+           class="btn-export btn-export-pdf" title="Exportar reporte a PDF">
+            <i class="fas fa-file-pdf"></i> Exportar PDF
+        </a>
+        <a href="{{ route('reportes.export.excel', array_merge(['tipo' => $tipo], request()->query())) }}"
+           class="btn-export btn-export-excel" title="Exportar reporte a Excel">
+            <i class="fas fa-file-excel"></i> Exportar Excel
+        </a>
+    </div>
+    @endif
 </div>
 
 {{-- Filtros --}}
@@ -189,6 +224,12 @@
     </div>
 </form>
 
+{{-- Mensaje de rango de fechas inválido --}}
+<div id="errorRangoFechas" class="alert-error" style="margin-bottom:20px; {{ !($rangoInvalido ?? false) ? 'display:none;' : '' }}">
+    <i class="fas fa-circle-xmark"></i>
+    <span>Rango de fechas inválido.</span>
+</div>
+
 {{-- ══════════════════════════════════════════
      REPORTE: VENTAS
 ══════════════════════════════════════════ --}}
@@ -228,7 +269,7 @@
                 <table>
                     <thead>
                         <tr>
-                            <th>Factura</th>
+                            <th>Comprobante</th>
                             <th>Vendedor</th>
                             <th>Subtotal</th>
                             <th>Descuento</th>
@@ -524,4 +565,25 @@ function toggleRango(val) {
     const el = document.getElementById('rangoPersonalizado');
     if (el) el.style.display = val === 'personalizado' ? 'flex' : 'none';
 }
+
+document.addEventListener('DOMContentLoaded', function() {
+    const formReportes = document.querySelector('form[action="{{ route('reportes.index') }}"]');
+    if (formReportes) {
+        formReportes.addEventListener('submit', function(e) {
+            const selPeriodo = formReportes.querySelector('select[name="periodo"]');
+            const tipo = formReportes.querySelector('input[name="tipo"]')?.value || 'ventas';
+            const esPersonalizado = (selPeriodo && selPeriodo.value === 'personalizado') || tipo === 'movimientos';
+
+            if (esPersonalizado) {
+                const desde = formReportes.querySelector('input[name="desde"]')?.value;
+                const hasta = formReportes.querySelector('input[name="hasta"]')?.value;
+                const errorMsg = document.getElementById('errorRangoFechas');
+                if (desde && hasta && desde > hasta) {
+                    e.preventDefault();
+                    if (errorMsg) errorMsg.style.display = 'flex';
+                }
+            }
+        });
+    }
+});
 </script>

@@ -22,4 +22,20 @@ return Application::configure(basePath: dirname(__DIR__))
         $exceptions->shouldRenderJsonWhen(
             fn (Request $request) => $request->is('api/*') || $request->expectsJson(),
         );
+
+        // Redirigir al login con mensaje personalizado cuando la sesión expira
+        $exceptions->render(function (\Illuminate\Auth\AuthenticationException $e, Request $request) {
+            if (!$request->expectsJson()) {
+                $sessionCookie = config('session.cookie');
+                $teniaSesionPrevia = $request->hasCookie($sessionCookie) || $request->hasCookie(session()->getName());
+
+                $redirect = redirect()->guest(route('login'));
+
+                if ($teniaSesionPrevia) {
+                    $redirect->with('error', 'Su sesión ha expirado. Inicia sesión nuevamente.');
+                }
+
+                return $redirect;
+            }
+        });
     })->create();

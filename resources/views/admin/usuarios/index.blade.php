@@ -6,6 +6,20 @@
 @section('content')
 <style>
     .toolbar { display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:14px; margin-bottom:22px; }
+    .filters { display:flex; gap:10px; flex-wrap:wrap; align-items:center; }
+    .filter-input {
+        padding:8px 12px; border:1.5px solid #E5E7EB; border-radius:9px;
+        font-size:.85rem; color:#1E1B4B; background:#fff; min-width:180px;
+        transition:border-color .2s;
+    }
+    .filter-input:focus { outline:none; border-color:#7C3AED; }
+    .btn-filtrar {
+        padding:8px 16px; background:#F5F3FF; color:#5B21B6;
+        border:1.5px solid #DDD6FE; border-radius:9px;
+        font-size:.85rem; font-weight:600; cursor:pointer; transition:all .2s;
+        display:inline-flex; align-items:center; gap:6px;
+    }
+    .btn-filtrar:hover { background:#EDE9FE; }
     .btn-nuevo { display:inline-flex; align-items:center; gap:8px; padding:10px 20px; background:#4A1D96; color:#fff; border:2px solid #4A1D96; border-radius:10px; font-family:'Outfit',sans-serif; font-size:.9rem; font-weight:700; cursor:pointer; transition:all .2s; white-space:nowrap; }
     .btn-nuevo:hover { background:#7C3AED; border-color:#7C3AED; }
 
@@ -78,14 +92,27 @@
 </style>
 
 {{-- Toolbar --}}
+<form method="GET" action="{{ route('usuarios.index') }}">
 <div class="toolbar">
-    <p style="font-size:.85rem; color:#6B7280;">
-        {{ $usuarios->count() }} {{ $usuarios->count() === 1 ? 'usuario registrado' : 'usuarios registrados' }}
-    </p>
-    <button class="btn-nuevo" onclick="abrirModal('modalCrear')">
+    <div class="filters">
+        <input type="text" name="buscar" class="filter-input" placeholder="Buscar por nombre o usuario..." value="{{ request('buscar') }}">
+        <select name="estado" class="filter-input" style="min-width:130px;">
+            <option value="">Todos</option>
+            <option value="activo"   {{ request('estado') === 'activo'   ? 'selected' : '' }}>Activos</option>
+            <option value="inactivo" {{ request('estado') === 'inactivo' ? 'selected' : '' }}>Inactivos</option>
+        </select>
+        <button type="submit" class="btn-filtrar"><i class="fas fa-filter"></i> Filtrar</button>
+        @if(request()->hasAny(['buscar','estado']))
+            <a href="{{ route('usuarios.index') }}" class="btn-filtrar" style="text-decoration:none;">
+                <i class="fas fa-xmark"></i> Limpiar
+            </a>
+        @endif
+    </div>
+    <button type="button" class="btn-nuevo" onclick="abrirModal('modalCrear')">
         <i class="fas fa-user-plus"></i> Nuevo usuario
     </button>
 </div>
+</form>
 
 {{-- Tabla --}}
 <div class="card">
@@ -167,7 +194,11 @@
                 <tr class="empty-row">
                     <td colspan="7">
                         <i class="fas fa-users"></i>
-                        Aún no hay usuarios registrados.
+                        @if(request()->hasAny(['buscar','estado']))
+                            No se encontraron usuarios con esos criterios.
+                        @else
+                            Aún no hay usuarios registrados.
+                        @endif
                     </td>
                 </tr>
                 @endforelse
@@ -346,6 +377,21 @@
     </div>
 </div>
 
+{{-- ═══════════════════════════════
+     MODAL AVISO (no se puede eliminar)
+════════════════════════════════ --}}
+<div class="modal-overlay {{ session('error') ? 'open' : '' }}" id="modalAviso">
+    <div class="modal-backdrop" onclick="cerrarModal('modalAviso')"></div>
+    <div class="modal-box" style="max-width:420px;">
+        <button class="modal-close" onclick="cerrarModal('modalAviso')"><i class="fas fa-xmark"></i></button>
+        <div class="modal-title" style="margin-bottom:12px;"><i class="fas fa-circle-exclamation" style="color:#DC2626;"></i> No se puede eliminar</div>
+        <p id="modalAvisoMsg" style="font-size:.88rem;color:#374151;margin-bottom:22px;">{{ session('error') }}</p>
+        <div class="modal-footer" style="margin-top:0;">
+            <button type="button" class="btn-guardar" onclick="cerrarModal('modalAviso')">Entendido</button>
+        </div>
+    </div>
+</div>
+
 <script>
     function abrirModal(id)  { document.getElementById(id).classList.add('open'); }
     function cerrarModal(id) { document.getElementById(id).classList.remove('open'); }
@@ -387,7 +433,7 @@
 
     document.addEventListener('keydown', e => {
         if (e.key === 'Escape') {
-            ['modalCrear','modalEditar','modalPass','modalConfirmUsuario'].forEach(cerrarModal);
+            ['modalCrear','modalEditar','modalPass','modalConfirmUsuario','modalAviso'].forEach(cerrarModal);
         }
     });
 

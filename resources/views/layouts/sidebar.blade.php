@@ -136,6 +136,7 @@
         /* ── Flash messages ── */
         .alert-success { background: #D1FAE5; color: #065F46; border: 1px solid #6EE7B7; border-radius: 10px; padding: 12px 18px; display: flex; align-items: center; gap: 10px; }
         .alert-error   { background: #FEE2E2; color: #991B1B; border: 1px solid #FCA5A5; border-radius: 10px; padding: 12px 18px; display: flex; align-items: center; gap: 10px; }
+        .alert-warning { background: #FEF3C7; color: #92400E; border: 1px solid #FCD34D; border-radius: 10px; padding: 12px 18px; display: flex; align-items: center; gap: 10px; margin-top: 10px; }
     </style>
 </head>
 <body>
@@ -254,7 +255,16 @@
                 <span>{{ session('success') }}</span>
             </div>
         @endif
-        @if(session('error'))
+        @if(session('warning'))
+            @php $warnings = is_array(session('warning')) ? session('warning') : [session('warning')]; @endphp
+            @foreach($warnings as $w)
+                <div class="alert-warning">
+                    <i class="fas fa-triangle-exclamation"></i>
+                    <span>{{ $w }}</span>
+                </div>
+            @endforeach
+        @endif
+        @if(session('error') && !request()->routeIs('usuarios.*'))
             <div class="alert-error">
                 <i class="fas fa-circle-xmark"></i>
                 <span>{{ session('error') }}</span>

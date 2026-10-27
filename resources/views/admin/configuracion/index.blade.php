@@ -101,11 +101,11 @@
                 </div>
 
                 {{-- ── Facturación ── --}}
-                <div class="form-section-title" style="margin-top:10px;"><i class="fas fa-file-invoice" style="margin-right:6px;"></i>Facturación y ventas</div>
+                <div class="form-section-title" style="margin-top:10px;"><i class="fas fa-file-invoice" style="margin-right:6px;"></i>Comprobantes y ventas</div>
 
                 <div class="form-group">
                     <label class="form-label">
-                        Prefijo de factura <span style="color:#EF4444">*</span>
+                        Prefijo de comprobante <span style="color:#EF4444">*</span>
                     </label>
                     <input type="text" name="prefijo_factura"
                         class="form-input {{ $errors->has('prefijo_factura') ? 'is-invalid' : '' }}"

@@ -22,6 +22,47 @@ class VentaController extends Controller
             ->orderByDesc('fecha_venta')
             ->orderByDesc('id');
 
+        $esAdmin = Auth::user()->esAdmin();
+
+        // Proveedores y productos para filtros (solo admin)
+        $proveedores = $esAdmin
+            ? Producto::whereNotNull('proveedor')
+                ->where('proveedor', '!=', '')
+                ->distinct()
+                ->orderBy('proveedor')
+                ->pluck('proveedor')
+            : collect();
+
+        $productosFiltro = $esAdmin
+            ? Producto::orderBy('nombre')->get()
+            : collect();
+
+        // Lista de empleados para el filtro (solo se usa en la vista si es admin)
+        $empleados = $esAdmin
+            ? \App\Models\User::orderBy('nombre')->get()
+            : collect();
+
+        // Descuento máximo para validación JS en el modal de ventas
+        $descuentoMaxPct = (float) \App\Models\Configuracion::valor('descuento_maximo_porcentaje', 100);
+
+        // Validar rango de fechas
+        $rangoInvalido = $request->filled('desde') && $request->filled('hasta')
+            && $request->desde > $request->hasta;
+
+        if ($rangoInvalido) {
+            return view('admin.ventas.index', [
+                'ventas'          => collect(),
+                'productos'       => Producto::with('inventario')->where('estado', 'activo')->orderBy('nombre')->get(),
+                'empleados'       => $empleados,
+                'productosFiltro' => $productosFiltro,
+                'proveedores'     => $proveedores,
+                'descuentoMaxPct' => $descuentoMaxPct,
+                'ventasHoy'       => Venta::whereDate('fecha_venta', today())->where('estado', '!=', 'anulada')->count(),
+                'ingresosHoy'     => Venta::whereDate('fecha_venta', today())->where('estado', '!=', 'anulada')->sum('total'),
+                'rangoInvalido'   => true,
+            ]);
+        }
+
         if ($request->filled('desde')) {
             $query->whereDate('fecha_venta', '>=', $request->desde);
         }
@@ -32,8 +73,20 @@ class VentaController extends Controller
             $query->where('estado', $request->estado);
         }
         // Filtro por empleado (solo admin puede usarlo)
-        if ($request->filled('empleado_id') && Auth::user()->esAdmin()) {
+        if ($request->filled('empleado_id') && $esAdmin) {
             $query->where('user_id', $request->empleado_id);
+        }
+        // Filtro por producto (solo admin puede usarlo)
+        if ($request->filled('producto_id') && $esAdmin) {
+            $query->whereHas('detalles', function ($q) use ($request) {
+                $q->where('producto_id', $request->producto_id);
+            });
+        }
+        // Filtro por proveedor (solo admin puede usarlo)
+        if ($request->filled('proveedor') && $esAdmin) {
+            $query->whereHas('detalles.producto', function ($q) use ($request) {
+                $q->where('proveedor', $request->proveedor);
+            });
         }
 
         $ventas    = $query->get();
@@ -42,14 +95,6 @@ class VentaController extends Controller
             ->orderBy('nombre')
             ->get();
 
-        // Lista de empleados para el filtro (solo se usa en la vista si es admin)
-        $empleados = Auth::user()->esAdmin()
-            ? \App\Models\User::orderBy('nombre')->get()
-            : collect();
-
-        // Descuento máximo para validación JS en el modal de ventas
-        $descuentoMaxPct = (float) \App\Models\Configuracion::valor('descuento_maximo_porcentaje', 100);
-
         // Métricas rápidas
         $ventasHoy   = Venta::whereDate('fecha_venta', today())
             ->where('estado', '!=', 'anulada')->count();
@@ -57,8 +102,8 @@ class VentaController extends Controller
             ->where('estado', '!=', 'anulada')->sum('total');
 
         return view('admin.ventas.index', compact(
-            'ventas', 'productos', 'ventasHoy', 'ingresosHoy', 'empleados', 'descuentoMaxPct'
-        ));
+            'ventas', 'productos', 'ventasHoy', 'ingresosHoy', 'empleados', 'productosFiltro', 'proveedores', 'descuentoMaxPct'
+        ) + ['rangoInvalido' => false]);
     }
 
     // POST /ventas
@@ -100,9 +145,11 @@ class VentaController extends Controller
 
         // Capturar ID antes del closure — getAuthIdentifier() devuelve 'usuario' no el id numérico
         $userId = Auth::user()->id;
+        $productosStockBajo = [];
+        $nuevaVentaId = null;
 
         try {
-            DB::transaction(function () use ($items, $descuento, $userId) {
+            DB::transaction(function () use ($items, $descuento, $userId, &$productosStockBajo, &$nuevaVentaId) {
                 $subtotal = 0;
                 $preciosBD = [];
 
@@ -135,6 +182,7 @@ class VentaController extends Controller
                     'user_id'     => $userId,
                 ]);
 
+                $nuevaVentaId = $venta->id;
                 $numFac = $prefijo . str_pad($venta->id, 6, '0', STR_PAD_LEFT);
 
                 // Procesar cada ítem
@@ -188,6 +236,8 @@ class VentaController extends Controller
                                 'producto_id'  => $pid,
                             ]);
                         }
+
+                        $productosStockBajo[$pid] = "Atención: {$producto->nombre} quedó con stock bajo ({$inv->cantidad_stock} unidades). Informa a la administradora.";
                     }
                 }
 
@@ -205,8 +255,18 @@ class VentaController extends Controller
             return back()->with('error', $e->getMessage());
         }
 
-        return redirect()->route('ventas.index')
+        $redirect = redirect()->route('ventas.index')
             ->with('success', 'Venta registrada correctamente.');
+
+        if ($nuevaVentaId) {
+            $redirect->with('comprobante_url', route('ventas.comprobante', $nuevaVentaId));
+        }
+
+        if (!empty($productosStockBajo)) {
+            $redirect->with('warning', array_values($productosStockBajo));
+        }
+
+        return $redirect;
     }
 
     // GET /ventas/{venta} — detalle en modal (AJAX)
@@ -214,6 +274,27 @@ class VentaController extends Controller
     {
         $venta->load(['factura', 'user', 'detalles.producto']);
         return view('admin.ventas.partials.detalle', compact('venta'));
+    }
+
+    // GET /ventas/{venta}/comprobante — comprobante POS tirilla 80mm
+    public function comprobante(Venta $venta)
+    {
+        // El empleado solo puede abrir los comprobantes de sus propias ventas
+        if (!Auth::user()->esAdmin() && $venta->user_id !== Auth::id()) {
+            abort(403, 'No tienes permiso para ver este comprobante.');
+        }
+
+        $venta->load(['factura', 'user', 'detalles.producto']);
+
+        $config = [
+            'nombre'    => Configuracion::valor('nombre_negocio', 'DisneyStock'),
+            'nit'       => Configuracion::valor('nit_negocio', ''),
+            'direccion' => Configuracion::valor('direccion_negocio', ''),
+            'telefono'  => Configuracion::valor('telefono_negocio', ''),
+            'pct_iva'   => (float) Configuracion::valor('porcentaje_iva', 0),
+        ];
+
+        return view('admin.ventas.comprobante', compact('venta', 'config'));
     }
 
     // PATCH /ventas/{venta}/anular

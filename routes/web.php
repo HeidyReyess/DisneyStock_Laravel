@@ -38,6 +38,8 @@ Route::middleware(['auth', 'activo', 'no-cache'])->group(function () {
     // [1] Excluir update y destroy: no existen en VentaController
     Route::resource('ventas', VentaController::class)
         ->except(['create', 'edit', 'update', 'destroy']);
+    Route::get('/ventas/{venta}/comprobante', [VentaController::class, 'comprobante'])
+        ->name('ventas.comprobante');
 
     // Reportes — admin y empleado
     Route::get('/reportes', [ReporteController::class, 'index'])->name('reportes.index');
@@ -72,5 +74,9 @@ Route::middleware(['auth', 'role:administrador', 'activo', 'no-cache'])->group(f
     // Configuración — solo administrador
     Route::get('/configuracion',  [ConfiguracionController::class, 'index'])->name('configuracion.index');
     Route::post('/configuracion', [ConfiguracionController::class, 'update'])->name('configuracion.update');
+
+    // Exportación de reportes — solo administrador
+    Route::get('/reportes/export/pdf',   [ReporteController::class, 'exportPdf'])->name('reportes.export.pdf');
+    Route::get('/reportes/export/excel', [ReporteController::class, 'exportExcel'])->name('reportes.export.excel');
 
 });

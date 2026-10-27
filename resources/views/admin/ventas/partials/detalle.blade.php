@@ -28,7 +28,7 @@
     <div style="display:flex; justify-content:space-between; flex-wrap:wrap; gap:10px; margin-bottom:18px; padding-bottom:16px; border-bottom:1px solid #F5F3FF;">
         <div>
             <div style="font-family:'Outfit',sans-serif; font-size:1.1rem; font-weight:800; color:#1E1B4B;">
-                {{ $venta->factura?->numero ?? 'Sin factura' }}
+                {{ $venta->factura?->numero ?? 'Sin comprobante' }}
             </div>
             <div style="font-size:.8rem; color:#9CA3AF; margin-top:2px;">
                 {{ $venta->fecha_venta->format('d/m/Y') }} · {{ $venta->user?->nombre ?? 'Sin vendedor' }}
@@ -90,5 +90,13 @@
             <span>Total</span>
             <span>$ {{ number_format($venta->total, 0, ',', '.') }}</span>
         </div>
+    </div>
+
+    {{-- Botón reimprimir comprobante POS --}}
+    <div style="margin-top:16px; text-align:center;">
+        <a href="{{ route('ventas.comprobante', $venta) }}" target="_blank"
+           class="btn-guardar" style="display:inline-flex; align-items:center; justify-content:center; gap:8px; text-decoration:none; width:100%; box-sizing:border-box; padding:10px 20px; font-size:.88rem;">
+            <i class="fas fa-print"></i> Imprimir comprobante POS
+        </a>
     </div>
 </div>

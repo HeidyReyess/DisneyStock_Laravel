@@ -7,13 +7,28 @@ use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Validation\Rules\Password;
 
 class UsuarioController extends Controller
 {
     // GET /usuarios
-    public function index()
+    public function index(Request $request)
     {
-        $usuarios = User::with('rol')->orderBy('nombre')->get();
+        $query = User::with('rol')->orderBy('nombre');
+
+        $buscar = $request->get('buscar', $request->get('q', ''));
+        if (!empty($buscar)) {
+            $query->where(function ($q) use ($buscar) {
+                $q->where('nombre', 'like', "%{$buscar}%")
+                  ->orWhere('usuario', 'like', "%{$buscar}%");
+            });
+        }
+
+        if ($request->filled('estado')) {
+            $query->where('estado', $request->estado);
+        }
+
+        $usuarios = $query->get();
         $roles    = Rol::orderBy('nombre')->get();
 
         return view('admin.usuarios.index', compact('usuarios', 'roles'));
@@ -25,7 +40,7 @@ class UsuarioController extends Controller
         $request->validate([
             'nombre'   => ['required', 'string', 'max:150'],
             'usuario'  => ['required', 'string', 'max:80', 'unique:users,usuario'],
-            'password' => ['required', 'string', 'min:8', 'confirmed'],
+            'password' => ['required', 'confirmed', Password::min(8)->letters()->numbers()],
             'rol_id'   => ['required', 'exists:roles,id'],
         ], [
             'nombre.required'    => 'El nombre es obligatorio.',
@@ -33,6 +48,8 @@ class UsuarioController extends Controller
             'usuario.unique'     => 'Ese nombre de usuario ya está en uso.',
             'password.required'  => 'La contraseña es obligatoria.',
             'password.min'       => 'La contraseña debe tener al menos 8 caracteres.',
+            'password.letters'   => 'La contraseña debe contener al menos una letra.',
+            'password.numbers'   => 'La contraseña debe contener al menos un número.',
             'password.confirmed' => 'Las contraseñas no coinciden.',
             'rol_id.required'    => 'Selecciona un rol.',
         ]);
@@ -77,10 +94,12 @@ class UsuarioController extends Controller
     public function resetPassword(Request $request, User $usuario)
     {
         $request->validate([
-            'password' => ['required', 'string', 'min:8', 'confirmed'],
+            'password' => ['required', 'confirmed', Password::min(8)->letters()->numbers()],
         ], [
             'password.required'  => 'La nueva contraseña es obligatoria.',
             'password.min'       => 'Debe tener al menos 8 caracteres.',
+            'password.letters'   => 'La contraseña debe contener al menos una letra.',
+            'password.numbers'   => 'La contraseña debe contener al menos un número.',
             'password.confirmed' => 'Las contraseñas no coinciden.',
         ]);
 
@@ -115,6 +134,17 @@ class UsuarioController extends Controller
         if ($usuario->id === Auth::id()) {
             return redirect()->route('usuarios.index')
                 ->with('error', 'No puedes eliminar tu propia cuenta.');
+        }
+
+        // Bloquear si tiene ventas o movimientos registrados
+        $tieneVentas      = $usuario->ventas()->exists();
+        $tieneMovimientos = $usuario->movimientos()->exists();
+
+        if ($tieneVentas || $tieneMovimientos) {
+            return redirect()->route('usuarios.index')
+                ->with('error', "No se puede eliminar a \"{$usuario->nombre}\": tiene " .
+                    ($tieneVentas ? 'ventas registradas' : 'movimientos de inventario registrados') .
+                    '. Desactívalo en su lugar.');
         }
 
         $nombre = $usuario->usuario;
