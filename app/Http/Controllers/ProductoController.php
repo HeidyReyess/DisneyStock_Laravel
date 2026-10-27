@@ -76,7 +76,7 @@ class ProductoController extends Controller
             'categoria_id.required'   => 'La categoría es obligatoria.',
             'categoria_id.exists'     => 'La categoría seleccionada no existe.',
             'imagen.image'            => 'El archivo debe ser una imagen.',
-            'imagen.max'              => 'La imagen no puede superar 2MB.',
+            'imagen.max'              => 'La imagen no puede superar 2 MB.',
         ]);
 
         // [5] Precio de venta debe ser mayor que precio de compra
@@ -147,7 +147,7 @@ class ProductoController extends Controller
             'categoria_id.required'  => 'La categoría es obligatoria.',
             'categoria_id.exists'    => 'La categoría seleccionada no existe.',
             'imagen.image'           => 'El archivo debe ser una imagen.',
-            'imagen.max'             => 'La imagen no puede superar 2MB.',
+            'imagen.max'             => 'La imagen no puede superar 2 MB.',
         ]);
 
         // [5] Precio de venta debe ser mayor que precio de compra

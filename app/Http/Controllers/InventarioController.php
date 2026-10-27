@@ -78,7 +78,8 @@ class InventarioController extends Controller
                 ->with('error', 'Este producto no tiene registro de inventario.');
         }
 
-        // Capturar el ID antes del closure — Auth::id() dentro del closure puede dar el campo usuario
+        // Capturar el ID antes del closure — Auth::id() retorna el campo 'usuario' (string) porque
+        // getAuthIdentifierName() devuelve 'usuario'. Hay que usar ->id explícito para el PK numérico.
         $userId = Auth::user()->id;
 
         DB::transaction(function () use ($request, $producto, $userId) {

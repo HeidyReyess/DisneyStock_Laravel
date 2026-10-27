@@ -33,12 +33,6 @@ class User extends Authenticatable
         return $this->belongsTo(Rol::class, 'rol_id');
     }
 
-    // Laravel usa este método para saber con qué columna autenticar
-    public function getAuthIdentifierName(): string
-    {
-        return 'usuario';
-    }
-
     // Helpers de conveniencia
     public function esAdmin(): bool
     {
