@@ -175,19 +175,27 @@
                         $stock  = $inv?->cantidad_stock ?? 0;
                         $minimo = $inv?->stock_minimo ?? 0;
                         $bajo   = $minimo > 0 && $stock <= $minimo;
+                        $medio  = $minimo > 0 && $stock > $minimo && $stock <= ($minimo * 2);
+                        // Verde si > doble del mínimo, amarillo si entre mínimo y doble, rojo si <= mínimo
+                        $barColor = $bajo ? '#EF4444' : ($medio ? '#F59E0B' : '#10B981');
                         $pct    = $minimo > 0 ? min(100, round(($stock / ($minimo * 2)) * 100)) : ($stock > 0 ? 100 : 0);
                     @endphp
                     <tr>
-                        <td style="font-weight:600; color:#1E1B4B;">{{ $prod->nombre }}</td>
+                        <td>
+                            <a href="{{ route('inventario.historial', ['producto_id' => $prod->id]) }}"
+                               style="font-weight:600; color:#1E1B4B; text-decoration:none;"
+                               title="Ver historial de {{ $prod->nombre }}">
+                                {{ $prod->nombre }}
+                            </a>
+                        </td>
                         <td style="color:#6B7280; font-size:.82rem;">{{ $prod->categoria?->nombre_categoria ?? '—' }}</td>
                         <td>
                             <div class="stock-wrap">
                                 <div class="stock-bar-bg">
-                                    <div class="stock-bar-fill {{ $bajo ? 'low' : 'ok' }}" style="width:{{ $pct }}%"></div>
+                                    <div class="stock-bar-fill" style="width:{{ $pct }}%; background:{{ $barColor }};"></div>
                                 </div>
-                                <div class="stock-nums">
-                                    <span style="font-weight:700; color:{{ $bajo ? '#DC2626' : '#4A1D96' }};">{{ $stock }}</span>
-                                    <span>mín {{ $minimo }}</span>
+                                <div>
+                                    <span style="font-weight:700; font-size:.82rem; color:{{ $bajo ? '#DC2626' : '#4A1D96' }};">{{ $stock }}</span>
                                 </div>
                             </div>
                         </td>
@@ -195,7 +203,7 @@
                         <td>
                             <span class="badge {{ $bajo ? 'badge-bajo' : 'badge-ok' }}">
                                 <i class="fas {{ $bajo ? 'fa-triangle-exclamation' : 'fa-check' }}"></i>
-                                {{ $bajo ? 'Stock bajo' : 'Normal' }}
+                                {{ $bajo ? 'Bajo' : 'Normal' }}
                             </span>
                         </td>
                         <td style="font-size:.8rem; color:#9CA3AF;">
@@ -206,7 +214,11 @@
                     <tr class="empty-row">
                         <td colspan="6">
                             <i class="fas fa-warehouse"></i>
-                            Aún no hay productos en inventario.
+                            @if(request('filtro') === 'bajo')
+                                No hay productos con stock bajo.
+                            @else
+                                Aún no hay productos en inventario.
+                            @endif
                         </td>
                     </tr>
                     @endforelse
@@ -218,7 +230,8 @@
     {{-- Panel lateral: últimos movimientos --}}
     <div class="card panel-mov">
         <div class="card-header">
-            <span class="card-title"><i class="fas fa-clock-rotate-left" style="color:#7C3AED;margin-right:8px;"></i>Movimientos recientes</span>
+            <span class="card-title" style="white-space:nowrap;"><i class="fas fa-clock-rotate-left" style="color:#7C3AED;margin-right:8px;"></i>Movimientos recientes</span>
+            <a href="{{ route('inventario.historial') }}" style="font-size:.75rem;color:#7C3AED;text-decoration:none;font-weight:600;white-space:nowrap;margin-left:8px;">Ver historial →</a>
         </div>
         <div class="card-body">
             @forelse($movimientos as $mov)
@@ -234,6 +247,9 @@
                     </div>
                     @if($mov->descripcion)
                         <div class="mov-detalle" style="color:#9CA3AF;">{{ $mov->descripcion }}</div>
+                    @endif
+                    @if($mov->user)
+                        <div class="mov-detalle" style="color:#A78BFA;">por {{ $mov->user->nombre }}</div>
                     @endif
                 </div>
                 <div style="font-size:.75rem; color:{{ $mov->tipo_movimiento === 'entrada' ? '#059669' : '#DC2626' }}; font-weight:700; white-space:nowrap;">
@@ -286,7 +302,7 @@
                             data-stock="{{ $p->inventario?->cantidad_stock ?? 0 }}"
                             data-minimo="{{ $p->inventario?->stock_minimo ?? 0 }}"
                             {{ old('producto_id') == $p->id ? 'selected' : '' }}>
-                            {{ $p->nombre }}
+                            {{ $p->nombre }} (stock: {{ $p->inventario?->cantidad_stock ?? 0 }})
                         </option>
                     @endforeach
                 </select>
@@ -307,10 +323,11 @@
             </div>
 
             <div class="form-group">
-                <label class="form-label">Descripción / motivo</label>
-                <textarea name="descripcion" class="form-input" rows="2"
+                <label class="form-label">Descripción / motivo <span style="color:#EF4444">*</span></label>
+                <textarea name="descripcion" class="form-input {{ $errors->has('descripcion') ? 'is-invalid' : '' }}" rows="2"
                     placeholder="Compra de mercancía, reposición, etc." maxlength="200"
                     style="resize:vertical;">{{ old('descripcion') }}</textarea>
+                @error('descripcion') <div class="invalid-msg"><i class="fas fa-circle-exclamation"></i> {{ $message }}</div> @enderror
             </div>
 
             <div class="modal-footer">

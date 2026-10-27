@@ -32,6 +32,7 @@ Route::middleware(['auth', 'activo', 'no-cache'])->group(function () {
 
     // Inventario — admin y empleado pueden ver el stock
     Route::get('/inventario', [InventarioController::class, 'index'])->name('inventario.index');
+    Route::get('/inventario/historial', [InventarioController::class, 'historial'])->name('inventario.historial');
 
     // Ventas — empleado puede ver y registrar; show para modal AJAX
     // [1] Excluir update y destroy: no existen en VentaController

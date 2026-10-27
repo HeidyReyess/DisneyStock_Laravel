@@ -228,10 +228,11 @@ class VentaController extends Controller
         }
 
         // Capturar ID antes del closure
-        $userId = Auth::user()->id;
+        $userId   = Auth::user()->id;
+        $numFac   = $venta->factura?->numero ?? "#{$venta->id}";
 
         try {
-            DB::transaction(function () use ($venta, $userId) {
+            DB::transaction(function () use ($venta, $userId, $numFac) {
                 $venta->load('detalles');
 
                 foreach ($venta->detalles as $detalle) {
@@ -245,7 +246,7 @@ class VentaController extends Controller
                             'tipo_movimiento' => 'entrada',
                             'cantidad'        => $detalle->cantidad,
                             'fecha'           => today(),
-                            'descripcion'     => "Anulación de venta #{$venta->id}",
+                            'descripcion'     => "Anulación de venta {$numFac}",
                             'producto_id'     => $detalle->producto_id,
                             'user_id'         => $userId,
                             'venta_id'        => $venta->id,

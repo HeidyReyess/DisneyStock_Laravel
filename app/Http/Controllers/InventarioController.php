@@ -48,10 +48,38 @@ class InventarioController extends Controller
         }
 
         $movimientos     = $movQuery->get();
-        $productosSelect = Producto::where('estado', 'activo')->orderBy('nombre')->get();
+        $productosSelect = Producto::with('inventario')->where('estado', 'activo')->orderBy('nombre')->get();
 
         return view('admin.inventario.index', compact(
             'productos', 'totalBajo', 'movimientos', 'productosSelect'
+        ));
+    }
+
+    // GET /inventario/historial
+    public function historial(Request $request)
+    {
+        $query = MovimientoInventario::with(['producto', 'user'])
+            ->orderByDesc('fecha')
+            ->orderByDesc('id');
+
+        if ($request->filled('producto_id')) {
+            $query->where('producto_id', $request->producto_id);
+        }
+        if ($request->filled('tipo')) {
+            $query->where('tipo_movimiento', $request->tipo);
+        }
+        if ($request->filled('desde')) {
+            $query->whereDate('fecha', '>=', $request->desde);
+        }
+        if ($request->filled('hasta')) {
+            $query->whereDate('fecha', '<=', $request->hasta);
+        }
+
+        $movimientos     = $query->paginate(20)->withQueryString();
+        $productosSelect = Producto::orderBy('nombre')->get();
+
+        return view('admin.inventario.historial', compact(
+            'movimientos', 'productosSelect'
         ));
     }
 
@@ -63,12 +91,14 @@ class InventarioController extends Controller
         $request->validate([
             'producto_id' => ['required', 'exists:productos,id'],
             'cantidad'    => ['required', 'integer', 'min:1'],
-            'descripcion' => ['nullable', 'string', 'max:200'],
+            'descripcion' => ['required', 'string', 'min:5', 'max:200'],
             'proveedor'   => ['nullable', 'string', 'max:100'],
         ], [
             'producto_id.required' => 'Selecciona un producto.',
             'cantidad.required'    => 'La cantidad es obligatoria.',
             'cantidad.min'         => 'La cantidad debe ser al menos 1.',
+            'descripcion.required' => 'La descripción o motivo es obligatorio.',
+            'descripcion.min'      => 'La descripción debe tener al menos 5 caracteres.',
         ]);
 
         $producto = Producto::with('inventario')->findOrFail($request->producto_id);
