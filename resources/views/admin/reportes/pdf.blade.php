@@ -243,7 +243,7 @@
                 </tbody>
                 <tfoot>
                     <tr>
-                        <td colspan="2" style="text-align: right;">TOTALES:</td>
+                        <td colspan="2" style="text-align: right;">TOTALES (sin anuladas):</td>
                         <td class="text-right">$ {{ number_format($datos->where('estado', '!=', 'anulada')->sum('subtotal'), 0, ',', '.') }}</td>
                         <td class="text-right">$ {{ number_format($datos->where('estado', '!=', 'anulada')->sum('descuento'), 0, ',', '.') }}</td>
                         <td class="text-right">$ {{ number_format($datos->where('estado', '!=', 'anulada')->sum('total'), 0, ',', '.') }}</td>

@@ -37,23 +37,23 @@
             <tr>
                 <td>{{ $v->factura?->numero ?? ('DS-' . str_pad($v->id, 6, '0', STR_PAD_LEFT)) }}</td>
                 <td>{{ $v->user?->nombre ?? '—' }}</td>
-                <td style="text-align: right;">$ {{ number_format($v->subtotal, 0, ',', '.') }}</td>
-                <td style="text-align: right;">{{ $v->descuento > 0 ? '$ ' . number_format($v->descuento, 0, ',', '.') : '—' }}</td>
-                <td style="text-align: right; font-weight: bold;">$ {{ number_format($v->total, 0, ',', '.') }}</td>
+                <td style="text-align: right;">{{ (float) $v->subtotal }}</td>
+                <td style="text-align: right;">{{ (float) ($v->descuento ?? 0) }}</td>
+                <td style="text-align: right; font-weight: bold;">{{ (float) $v->total }}</td>
                 <td style="text-align: center;">{{ ucfirst($v->estado) }}</td>
                 <td style="text-align: center;">{{ $v->fecha_venta->format('d/m/Y') }}</td>
             </tr>
             @endforeach
             <tr>
-                <td colspan="2" style="font-weight: bold; background-color: #F5F3FF; text-align: right;">TOTALES:</td>
+                <td colspan="2" style="font-weight: bold; background-color: #F5F3FF; text-align: right;">TOTALES (sin anuladas):</td>
                 <td style="font-weight: bold; background-color: #F5F3FF; text-align: right;">
-                    $ {{ number_format($datos->where('estado', '!=', 'anulada')->sum('subtotal'), 0, ',', '.') }}
+                    {{ (float) $datos->where('estado', '!=', 'anulada')->sum('subtotal') }}
                 </td>
                 <td style="font-weight: bold; background-color: #F5F3FF; text-align: right;">
-                    $ {{ number_format($datos->where('estado', '!=', 'anulada')->sum('descuento'), 0, ',', '.') }}
+                    {{ (float) $datos->where('estado', '!=', 'anulada')->sum('descuento') }}
                 </td>
                 <td style="font-weight: bold; background-color: #F5F3FF; text-align: right;">
-                    $ {{ number_format($datos->where('estado', '!=', 'anulada')->sum('total'), 0, ',', '.') }}
+                    {{ (float) $datos->where('estado', '!=', 'anulada')->sum('total') }}
                 </td>
                 <td colspan="2" style="background-color: #F5F3FF;"></td>
             </tr>
@@ -73,18 +73,18 @@
             @foreach($ventasPorCategoria as $vc)
             <tr>
                 <td>{{ $vc->nombre_categoria }}</td>
-                <td style="text-align: center;">{{ number_format($vc->unidades, 0, ',', '.') }}</td>
-                <td style="text-align: right;">$ {{ number_format($vc->total, 0, ',', '.') }}</td>
+                <td style="text-align: center;">{{ (int) $vc->unidades }}</td>
+                <td style="text-align: right;">{{ (float) $vc->total }}</td>
                 <td colspan="4"></td>
             </tr>
             @endforeach
             <tr>
                 <td style="font-weight: bold; background-color: #EDE9FE; text-align: right;">Total</td>
                 <td style="font-weight: bold; background-color: #EDE9FE; text-align: center;">
-                    {{ number_format($ventasPorCategoria->sum('unidades'), 0, ',', '.') }}
+                    {{ (int) $ventasPorCategoria->sum('unidades') }}
                 </td>
                 <td style="font-weight: bold; background-color: #EDE9FE; text-align: right;">
-                    $ {{ number_format($ventasPorCategoria->sum('total'), 0, ',', '.') }}
+                    {{ (float) $ventasPorCategoria->sum('total') }}
                 </td>
                 <td colspan="4"></td>
             </tr>
@@ -110,20 +110,20 @@
             <tr>
                 <td>{{ $prod->nombre }}</td>
                 <td>{{ $prod->categoria?->nombre_categoria ?? '—' }}</td>
-                <td style="text-align: center;">{{ $stock }}</td>
-                <td style="text-align: center;">{{ $minimo }}</td>
+                <td style="text-align: center;">{{ (int) $stock }}</td>
+                <td style="text-align: center;">{{ (int) $minimo }}</td>
                 <td style="text-align: center;">{{ $bajo ? 'Bajo' : 'Normal' }}</td>
-                <td style="text-align: right;">$ {{ number_format($stock * $prod->precio_compra, 0, ',', '.') }}</td>
-                <td style="text-align: right;">$ {{ number_format($stock * $prod->precio_venta, 0, ',', '.') }}</td>
+                <td style="text-align: right;">{{ (float) ($stock * $prod->precio_compra) }}</td>
+                <td style="text-align: right;">{{ (float) ($stock * $prod->precio_venta) }}</td>
             </tr>
             @endforeach
             <tr>
                 <td colspan="5" style="font-weight: bold; background-color: #EDE9FE; text-align: right;">TOTAL:</td>
                 <td style="font-weight: bold; background-color: #EDE9FE; text-align: right;">
-                    $ {{ number_format($datos->sum(fn($p) => ($p->inventario?->cantidad_stock ?? 0) * $p->precio_compra), 0, ',', '.') }}
+                    {{ (float) $datos->sum(fn($p) => ($p->inventario?->cantidad_stock ?? 0) * $p->precio_compra) }}
                 </td>
                 <td style="font-weight: bold; background-color: #EDE9FE; text-align: right;">
-                    $ {{ number_format($datos->sum(fn($p) => ($p->inventario?->cantidad_stock ?? 0) * $p->precio_venta), 0, ',', '.') }}
+                    {{ (float) $datos->sum(fn($p) => ($p->inventario?->cantidad_stock ?? 0) * $p->precio_venta) }}
                 </td>
             </tr>
 
@@ -146,9 +146,9 @@
             <tr>
                 <td>{{ $prod->nombre }}</td>
                 <td>{{ $prod->categoria?->nombre_categoria ?? '—' }}</td>
-                <td style="text-align: center; color: #DC2626; font-weight: bold;">{{ $stock }}</td>
-                <td style="text-align: center;">{{ $minimo }}</td>
-                <td style="text-align: center;">{{ $faltante }}</td>
+                <td style="text-align: center; color: #DC2626; font-weight: bold;">{{ (int) $stock }}</td>
+                <td style="text-align: center;">{{ (int) $minimo }}</td>
+                <td style="text-align: center;">{{ (int) $faltante }}</td>
                 <td>{{ $prod->proveedor ?? '—' }}</td>
             </tr>
             @endforeach
@@ -168,7 +168,7 @@
             <tr>
                 <td>{{ $mov->producto?->nombre ?? '—' }}</td>
                 <td style="text-align: center;">{{ ucfirst($mov->tipo_movimiento) }}</td>
-                <td style="text-align: center;">{{ $mov->tipo_movimiento === 'entrada' ? '+' : '-' }}{{ $mov->cantidad }}</td>
+                <td style="text-align: center;">{{ $mov->tipo_movimiento === 'salida' ? -$mov->cantidad : (int)$mov->cantidad }}</td>
                 <td>{{ $mov->descripcion ?? '—' }}</td>
                 <td>{{ $mov->proveedor ?? '—' }}</td>
                 <td>{{ $mov->user?->nombre ?? 'Sistema' }}</td>
