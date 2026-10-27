@@ -41,13 +41,38 @@ class DashboardController extends Controller
             ->where('productos.estado', 'activo')
             ->count();
 
+        // Últimas 5 ventas no anuladas con usuario
+        $ventasRecientes = \App\Models\Venta::with('user')
+            ->where('estado', '!=', 'anulada')
+            ->orderByDesc('fecha_venta')
+            ->orderByDesc('id')
+            ->limit(5)
+            ->get();
+
+        // Top 5 productos más vendidos (ventas no anuladas)
+        $topProductos = DB::table('detalle_ventas')
+            ->join('ventas', 'ventas.id', '=', 'detalle_ventas.venta_id')
+            ->join('productos', 'productos.id', '=', 'detalle_ventas.producto_id')
+            ->where('ventas.estado', '!=', 'anulada')
+            ->select(
+                'productos.nombre',
+                DB::raw('SUM(detalle_ventas.cantidad) as total_cantidad'),
+                DB::raw('SUM(detalle_ventas.subtotal) as total_vendido')
+            )
+            ->groupBy('productos.id', 'productos.nombre')
+            ->orderByDesc('total_cantidad')
+            ->limit(5)
+            ->get();
+
         return view('admin.dashboard', compact(
             'usuario',
             'fechaHoy',
             'productosActivos',
             'ventasHoy',
             'ingresosMes',
-            'stockBajo'
+            'stockBajo',
+            'ventasRecientes',
+            'topProductos'
         ));
     }
 }

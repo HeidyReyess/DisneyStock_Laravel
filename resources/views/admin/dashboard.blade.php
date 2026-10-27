@@ -123,15 +123,46 @@
     <div class="card">
         <div class="card-header">
             <span class="card-title"><i class="fas fa-receipt" style="color:#7C3AED;margin-right:8px;"></i>Ventas recientes</span>
-            <a href="{{ Route::has('ventas.index') ? route('ventas.index') : '#' }}"
-               onclick="{{ Route::has('ventas.index') ? 'return true' : 'proximamente(); return false' }}"
+            <a href="{{ route('ventas.index') }}"
                style="font-size:.8rem;color:#7C3AED;text-decoration:none;font-weight:600;">Ver todas →</a>
         </div>
         <div class="card-body" style="padding:0 0 4px;">
-            <div class="empty-state">
-                <i class="fas fa-receipt"></i>
-                <p>Aún no hay ventas registradas.</p>
-            </div>
+            @forelse($ventasRecientes as $venta)
+                @if($loop->first)
+                <div class="table-wrap">
+                <table>
+                    <thead>
+                        <tr>
+                            <th># Venta</th>
+                            <th>Fecha</th>
+                            <th>Empleado</th>
+                            <th>Total</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                @endif
+                        <tr>
+                            <td>
+                                <a href="{{ route('ventas.show', $venta) }}"
+                                   style="color:#5B21B6;font-weight:600;text-decoration:none;">
+                                    #{{ $venta->id }}
+                                </a>
+                            </td>
+                            <td>{{ $venta->fecha_venta->format('d/m/Y') }}</td>
+                            <td style="color:#6B7280;">{{ $venta->user?->nombre ?? '—' }}</td>
+                            <td style="font-weight:600;">$ {{ number_format($venta->total, 0, ',', '.') }}</td>
+                        </tr>
+                @if($loop->last)
+                    </tbody>
+                </table>
+                </div>
+                @endif
+            @empty
+                <div class="empty-state">
+                    <i class="fas fa-receipt"></i>
+                    <p>Aún no hay ventas registradas.</p>
+                </div>
+            @endforelse
         </div>
     </div>
 
@@ -162,10 +193,37 @@
             <span class="card-title"><i class="fas fa-trophy" style="color:#7C3AED;margin-right:8px;"></i>Productos más vendidos</span>
         </div>
         <div class="card-body" style="padding:0 0 4px;">
-            <div class="empty-state">
-                <i class="fas fa-trophy"></i>
-                <p>Los productos más vendidos<br>aparecerán aquí.</p>
-            </div>
+            @forelse($topProductos as $item)
+                @if($loop->first)
+                <div class="table-wrap">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>#</th>
+                            <th>Producto</th>
+                            <th>Unidades</th>
+                            <th>Total vendido</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                @endif
+                        <tr>
+                            <td><span class="badge badge-purple">{{ $loop->iteration }}</span></td>
+                            <td style="font-weight:600;color:#1E1B4B;">{{ $item->nombre }}</td>
+                            <td>{{ number_format($item->total_cantidad, 0, ',', '.') }}</td>
+                            <td style="font-weight:600;">$ {{ number_format($item->total_vendido, 0, ',', '.') }}</td>
+                        </tr>
+                @if($loop->last)
+                    </tbody>
+                </table>
+                </div>
+                @endif
+            @empty
+                <div class="empty-state">
+                    <i class="fas fa-trophy"></i>
+                    <p>Los productos más vendidos<br>aparecerán aquí.</p>
+                </div>
+            @endforelse
         </div>
     </div>
 
