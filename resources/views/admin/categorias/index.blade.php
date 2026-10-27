@@ -159,7 +159,7 @@
                                 <i class="fas fa-pen"></i> Editar
                             </button>
                             <form method="POST" action="{{ route('categorias.destroy', $cat) }}"
-                                  onsubmit="return confirmarEliminar(event, '{{ addslashes($cat->nombre_categoria) }}', {{ $cat->productos_count }})">
+                                  onsubmit="confirmarEliminar(event, '{{ addslashes($cat->nombre_categoria) }}', {{ $cat->productos_count }}); return false;">
                                 @csrf @method('DELETE')
                                 <button type="submit" class="btn-accion btn-eliminar"
                                     {{ $cat->productos_count > 0 ? 'disabled title=Tiene productos asociados' : '' }}>
@@ -251,6 +251,20 @@
     </div>
 </div>
 
+{{-- Modal confirmar eliminar categoría --}}
+<div class="modal-overlay" id="modalConfirmCat">
+    <div class="modal-backdrop" onclick="cerrarModal('modalConfirmCat')"></div>
+    <div class="modal-box" style="max-width:420px;">
+        <button class="modal-close" onclick="cerrarModal('modalConfirmCat')"><i class="fas fa-xmark"></i></button>
+        <div class="modal-title" id="modalConfirmCatTitle" style="margin-bottom:12px;"></div>
+        <p id="modalConfirmCatMsg" style="font-size:.88rem;color:#374151;margin-bottom:22px;"></p>
+        <div class="modal-footer" style="margin-top:0;">
+            <button type="button" class="btn-cancelar" onclick="cerrarModal('modalConfirmCat')">Cancelar</button>
+            <button id="modalConfirmCatOk" type="button" class="btn-guardar" style="background:#DC2626;border-color:#DC2626;">Eliminar</button>
+        </div>
+    </div>
+</div>
+
 <script>
     // ── Abrir / cerrar modales ──────────────────────────────
     function abrirModalCrear() {
@@ -271,6 +285,7 @@
         if (e.key === 'Escape') {
             cerrarModal('modalCrear');
             cerrarModal('modalEditar');
+            cerrarModal('modalConfirmCat');
         }
     });
 
@@ -281,8 +296,18 @@
 
     // ── Confirmar eliminación ───────────────────────────────
     function confirmarEliminar(e, nombre, count) {
-        if (count > 0) { e.preventDefault(); return false; }
-        return confirm('¿Eliminar la categoría "' + nombre + '"? Esta acción no se puede deshacer.');
+        e.preventDefault();
+        if (count > 0) return; // botón deshabilitado, nunca llega aquí, por si acaso
+        document.getElementById('modalConfirmCatTitle').innerHTML =
+            '<i class="fas fa-trash" style="color:#DC2626;"></i> Eliminar categoría';
+        document.getElementById('modalConfirmCatMsg').textContent =
+            '¿Seguro que deseas eliminar "' + nombre + '"?';
+        const form = e.target.closest('form');
+        document.getElementById('modalConfirmCatOk').onclick = function() {
+            cerrarModal('modalConfirmCat');
+            form.submit();
+        };
+        document.getElementById('modalConfirmCat').classList.add('open');
     }
 </script>
 @endsection

@@ -133,6 +133,7 @@ class ProductoController extends Controller
         ], [
             'nombre.required'        => 'El nombre del producto es obligatorio.',
             'nombre.max'             => 'El nombre no puede superar 255 caracteres.',
+            'nombre.unique'          => 'Ya existe un producto con ese nombre.',
             'precio_venta.required'  => 'El precio de venta es obligatorio.',
             'precio_venta.integer'   => 'El precio de venta debe ser un número entero.',
             'precio_venta.min'       => 'El precio de venta debe ser al menos 1.',

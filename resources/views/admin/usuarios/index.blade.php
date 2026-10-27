@@ -153,7 +153,7 @@
 
                                 {{-- Eliminar --}}
                                 <form method="POST" action="{{ route('usuarios.destroy', $u) }}" style="display:inline;"
-                                    onsubmit="return confirm('¿Eliminar al usuario {{ addslashes($u->usuario) }}? Esta acción no se puede deshacer.')">
+                                    onsubmit="confirmarEliminarUsuario(event, '{{ addslashes($u->usuario) }}'); return false;">
                                     @csrf @method('DELETE')
                                     <button type="submit" class="btn-accion btn-eliminar">
                                         <i class="fas fa-trash"></i>
@@ -332,9 +332,35 @@
     </div>
 </div>
 
+{{-- Modal confirmar eliminar usuario --}}
+<div class="modal-overlay" id="modalConfirmUsuario">
+    <div class="modal-backdrop" onclick="cerrarModal('modalConfirmUsuario')"></div>
+    <div class="modal-box" style="max-width:420px;">
+        <button class="modal-close" onclick="cerrarModal('modalConfirmUsuario')"><i class="fas fa-xmark"></i></button>
+        <div class="modal-title" style="margin-bottom:12px;"><i class="fas fa-trash" style="color:#DC2626;"></i> Eliminar usuario</div>
+        <p id="modalConfirmUsuarioMsg" style="font-size:.88rem;color:#374151;margin-bottom:22px;"></p>
+        <div class="modal-footer" style="margin-top:0;">
+            <button type="button" class="btn-cancelar" onclick="cerrarModal('modalConfirmUsuario')">Cancelar</button>
+            <button id="modalConfirmUsuarioOk" type="button" class="btn-guardar" style="background:#DC2626;border-color:#DC2626;">Eliminar</button>
+        </div>
+    </div>
+</div>
+
 <script>
     function abrirModal(id)  { document.getElementById(id).classList.add('open'); }
     function cerrarModal(id) { document.getElementById(id).classList.remove('open'); }
+
+    function confirmarEliminarUsuario(e, usuario) {
+        e.preventDefault();
+        document.getElementById('modalConfirmUsuarioMsg').textContent =
+            '¿Seguro que deseas eliminar al usuario "' + usuario + '"?';
+        const form = e.target.closest('form');
+        document.getElementById('modalConfirmUsuarioOk').onclick = function() {
+            cerrarModal('modalConfirmUsuario');
+            form.submit();
+        };
+        abrirModal('modalConfirmUsuario');
+    }
 
     function abrirModalEditar(id, nombre, usuario, rolId) {
         document.getElementById('formEditar').action = '{{ url('usuarios') }}/' + id;
@@ -361,7 +387,7 @@
 
     document.addEventListener('keydown', e => {
         if (e.key === 'Escape') {
-            ['modalCrear','modalEditar','modalPass'].forEach(cerrarModal);
+            ['modalCrear','modalEditar','modalPass','modalConfirmUsuario'].forEach(cerrarModal);
         }
     });
 

@@ -237,7 +237,7 @@
 
                             {{-- Eliminar --}}
                             <form method="POST" action="{{ route('productos.destroy', $prod) }}" style="display:inline;"
-                                  onsubmit="return confirmarEliminar(event, '{{ addslashes($prod->nombre) }}', {{ $prod->tieneDependencias() ? 'true' : 'false' }})">
+                                  onsubmit="confirmarEliminar(event, '{{ addslashes($prod->nombre) }}', {{ $prod->tieneDependencias() ? 'true' : 'false' }}); return false;">
                                 @csrf @method('DELETE')
                                 <button type="submit" class="btn-accion btn-eliminar">
                                     <i class="fas fa-trash"></i>
@@ -476,16 +476,27 @@
     }
 
     function confirmarEliminar(e, nombre, tieneDep) {
+        e.preventDefault();
         if (tieneDep) {
-            e.preventDefault();
-            alert('No se puede eliminar "' + nombre + '": tiene ventas o movimientos registrados. Desactívalo en su lugar.');
-            return false;
+            document.getElementById('modalAvisoMsg').textContent =
+                'No se puede eliminar "' + nombre + '": tiene ventas o movimientos registrados. Desactívalo en su lugar.';
+            document.getElementById('modalAviso').classList.add('open');
+            return;
         }
-        return confirm('¿Eliminar el producto "' + nombre + '"? Esta acción no se puede deshacer.');
+        document.getElementById('modalConfirmTitle').innerHTML =
+            '<i class="fas fa-trash" style="color:#DC2626;"></i> Eliminar producto';
+        document.getElementById('modalConfirmMsg').textContent =
+            '¿Seguro que deseas eliminar "' + nombre + '"?';
+        const form = e.target.closest('form');
+        document.getElementById('modalConfirmOk').onclick = function() {
+            cerrarModal('modalConfirm');
+            form.submit();
+        };
+        document.getElementById('modalConfirm').classList.add('open');
     }
 
     document.addEventListener('keydown', e => {
-        if (e.key === 'Escape') { cerrarModal('modalCrear'); cerrarModal('modalEditar'); }
+        if (e.key === 'Escape') { cerrarModal('modalCrear'); cerrarModal('modalEditar'); cerrarModal('modalConfirm'); cerrarModal('modalAviso'); }
     });
 
     @if($errors->any())
@@ -506,6 +517,37 @@
         @endif
     @endif
 </script>
+
+{{-- ═══════════════════════════════
+     MODAL CONFIRMAR ACCIÓN
+════════════════════════════════ --}}
+<div class="modal-overlay" id="modalConfirm">
+    <div class="modal-backdrop" onclick="cerrarModal('modalConfirm')"></div>
+    <div class="modal-box" style="max-width:420px;">
+        <button class="modal-close" onclick="cerrarModal('modalConfirm')"><i class="fas fa-xmark"></i></button>
+        <div class="modal-title" id="modalConfirmTitle" style="margin-bottom:12px;"></div>
+        <p id="modalConfirmMsg" style="font-size:.88rem;color:#374151;margin-bottom:22px;"></p>
+        <div class="modal-footer" style="margin-top:0;">
+            <button id="modalConfirmCancel" type="button" class="btn-cancelar" onclick="cerrarModal('modalConfirm')">Cancelar</button>
+            <button id="modalConfirmOk" type="button" class="btn-guardar" style="background:#DC2626;border-color:#DC2626;">Eliminar</button>
+        </div>
+    </div>
+</div>
+
+{{-- ═══════════════════════════════
+     MODAL AVISO (no se puede eliminar)
+════════════════════════════════ --}}
+<div class="modal-overlay" id="modalAviso">
+    <div class="modal-backdrop" onclick="cerrarModal('modalAviso')"></div>
+    <div class="modal-box" style="max-width:420px;">
+        <button class="modal-close" onclick="cerrarModal('modalAviso')"><i class="fas fa-xmark"></i></button>
+        <div class="modal-title" style="margin-bottom:12px;"><i class="fas fa-circle-exclamation" style="color:#DC2626;"></i> No se puede eliminar</div>
+        <p id="modalAvisoMsg" style="font-size:.88rem;color:#374151;margin-bottom:22px;"></p>
+        <div class="modal-footer" style="margin-top:0;">
+            <button type="button" class="btn-guardar" onclick="cerrarModal('modalAviso')">Entendido</button>
+        </div>
+    </div>
+</div>
 
 {{-- ═══════════════════════════════
      MODAL VER IMAGEN
