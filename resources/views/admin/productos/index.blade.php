@@ -443,7 +443,7 @@
     function abrirModalCrear() { document.getElementById('modalCrear').classList.add('open'); }
 
     function abrirModalEditar(id, nombre, pventa, pcompra, fecha, proveedor, catId, minimo, imgUrl) {
-        document.getElementById('formEditar').action = '/productos/' + id;
+        document.getElementById('formEditar').action = '{{ url('productos') }}/' + id;
         document.getElementById('edit_id').value       = id;    // [8] guardar id para reapertura
         document.getElementById('edit_nombre').value    = nombre;
         // [4] parseInt para mostrar valor sin decimales

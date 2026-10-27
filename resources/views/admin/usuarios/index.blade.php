@@ -337,7 +337,7 @@
     function cerrarModal(id) { document.getElementById(id).classList.remove('open'); }
 
     function abrirModalEditar(id, nombre, usuario, rolId) {
-        document.getElementById('formEditar').action = '/usuarios/' + id;
+        document.getElementById('formEditar').action = '{{ url('usuarios') }}/' + id;
         document.getElementById('edit_nombre').value  = nombre;
         document.getElementById('edit_usuario').value = usuario;
         const sel = document.getElementById('edit_rol');
@@ -346,7 +346,7 @@
     }
 
     function abrirModalPass(id, usuario) {
-        document.getElementById('formPass').action = '/usuarios/' + id + '/reset-password';
+        document.getElementById('formPass').action = '{{ url('usuarios') }}/' + id + '/reset-password';
         document.getElementById('passUsuarioNombre').textContent = usuario;
         document.getElementById('pwdReset').value = '';
         abrirModal('modalPass');

@@ -257,7 +257,7 @@
         document.getElementById('modalCrear').classList.add('open');
     }
     function abrirModalEditar(id, nombre, desc) {
-        document.getElementById('formEditar').action = '/categorias/' + id;
+        document.getElementById('formEditar').action = '{{ url('categorias') }}/' + id;
         document.getElementById('nombre_editar').value = nombre;
         document.getElementById('desc_editar').value   = desc;
         document.getElementById('modalEditar').classList.add('open');
