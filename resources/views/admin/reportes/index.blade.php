@@ -114,12 +114,46 @@
         @if($tipo === 'ventas')
             <div class="filtro-group">
                 <span class="filtro-label">Período</span>
-                <select name="periodo" class="filtro-select" onchange="this.form.submit()">
-                    <option value="hoy"    {{ $periodo === 'hoy'    ? 'selected' : '' }}>Hoy</option>
-                    <option value="semana" {{ $periodo === 'semana' ? 'selected' : '' }}>Esta semana</option>
-                    <option value="mes"    {{ $periodo === 'mes'    ? 'selected' : '' }}>Este mes</option>
+                <select name="periodo" class="filtro-select" onchange="toggleRango(this.value); this.form.submit()">
+                    <option value="hoy"          {{ $periodo === 'hoy'          ? 'selected' : '' }}>Hoy</option>
+                    <option value="semana"        {{ $periodo === 'semana'       ? 'selected' : '' }}>Esta semana</option>
+                    <option value="mes"           {{ $periodo === 'mes'          ? 'selected' : '' }}>Este mes</option>
+                    <option value="personalizado" {{ $periodo === 'personalizado'? 'selected' : '' }}>Personalizado</option>
                 </select>
             </div>
+            <div id="rangoPersonalizado" style="{{ $periodo === 'personalizado' ? '' : 'display:none;' }} display:flex; gap:10px; flex-wrap:wrap; align-items:flex-end;">
+                <div class="filtro-group">
+                    <span class="filtro-label">Desde</span>
+                    <input type="date" name="desde" class="filtro-input" value="{{ $desde }}">
+                </div>
+                <div class="filtro-group">
+                    <span class="filtro-label">Hasta</span>
+                    <input type="date" name="hasta" class="filtro-input" value="{{ $hasta }}">
+                </div>
+            </div>
+            <div class="filtro-group">
+                <span class="filtro-label">Empleado</span>
+                <select name="empleado_id" class="filtro-select">
+                    <option value="">Todos</option>
+                    @foreach($empleadosLista as $emp)
+                        <option value="{{ $emp->id }}" {{ $empleadoId == $emp->id ? 'selected' : '' }}>
+                            {{ $emp->nombre }}
+                        </option>
+                    @endforeach
+                </select>
+            </div>
+            <div class="filtro-group">
+                <span class="filtro-label">Categoría</span>
+                <select name="categoria_id" class="filtro-select">
+                    <option value="">Todas</option>
+                    @foreach($categoriasLista as $cat)
+                        <option value="{{ $cat->id }}" {{ $categoriaId == $cat->id ? 'selected' : '' }}>
+                            {{ $cat->nombre_categoria }}
+                        </option>
+                    @endforeach
+                </select>
+            </div>
+            <button type="submit" class="btn-filtrar"><i class="fas fa-filter"></i> Filtrar</button>
         @endif
 
         @if($tipo === 'movimientos')
@@ -274,6 +308,42 @@
 
         </div>
     </div>
+
+    {{-- Ventas por categoría --}}
+    @if($ventasPorCategoria->count())
+    <div class="card" style="margin-top:18px;">
+        <div class="card-header">
+            <span class="card-title"><i class="fas fa-tag" style="color:#7C3AED;margin-right:8px;"></i>Ventas por categoría</span>
+        </div>
+        <div class="table-wrap">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Categoría</th>
+                        <th>Unidades vendidas</th>
+                        <th>Total</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach($ventasPorCategoria as $vc)
+                    <tr>
+                        <td style="font-weight:600;color:#1E1B4B;">{{ $vc->nombre_categoria }}</td>
+                        <td>{{ number_format($vc->unidades, 0, ',', '.') }}</td>
+                        <td style="font-weight:700;">$ {{ number_format($vc->total, 0, ',', '.') }}</td>
+                    </tr>
+                    @endforeach
+                </tbody>
+                <tfoot>
+                    <tr style="background:#F5F3FF;">
+                        <td style="padding:10px 14px;font-weight:700;color:#4A1D96;font-size:.84rem;">Total</td>
+                        <td style="padding:10px 14px;font-weight:700;">{{ number_format($ventasPorCategoria->sum('unidades'), 0, ',', '.') }}</td>
+                        <td style="padding:10px 14px;font-weight:700;">$ {{ number_format($ventasPorCategoria->sum('total'), 0, ',', '.') }}</td>
+                    </tr>
+                </tfoot>
+            </table>
+        </div>
+    </div>
+    @endif
 
 {{-- ══════════════════════════════════════════
      REPORTE: INVENTARIO VALORIZADO
@@ -448,3 +518,10 @@
 @endif
 
 @endsection
+
+<script>
+function toggleRango(val) {
+    const el = document.getElementById('rangoPersonalizado');
+    if (el) el.style.display = val === 'personalizado' ? 'flex' : 'none';
+}
+</script>

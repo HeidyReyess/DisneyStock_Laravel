@@ -114,8 +114,18 @@
             <option value="completada" {{ request('estado') === 'completada' ? 'selected' : '' }}>Completadas</option>
             <option value="anulada"    {{ request('estado') === 'anulada'    ? 'selected' : '' }}>Anuladas</option>
         </select>
+        @if(Auth::user()->esAdmin())
+        <select name="empleado_id" class="filter-input" style="min-width:150px;">
+            <option value="">Todos los empleados</option>
+            @foreach($empleados as $emp)
+                <option value="{{ $emp->id }}" {{ request('empleado_id') == $emp->id ? 'selected' : '' }}>
+                    {{ $emp->nombre }}
+                </option>
+            @endforeach
+        </select>
+        @endif
         <button type="submit" class="btn-filtrar"><i class="fas fa-filter"></i> Filtrar</button>
-        @if(request()->hasAny(['desde','hasta','estado']))
+        @if(request()->hasAny(['desde','hasta','estado','empleado_id']))
             <a href="{{ route('ventas.index') }}" class="btn-filtrar" style="text-decoration:none;">
                 <i class="fas fa-xmark"></i> Limpiar
             </a>

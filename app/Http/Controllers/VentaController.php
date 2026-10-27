@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Alerta;
+use App\Models\Configuracion;
 use App\Models\DetalleVenta;
 use App\Models\Factura;
 use App\Models\MovimientoInventario;
@@ -30,12 +31,21 @@ class VentaController extends Controller
         if ($request->filled('estado')) {
             $query->where('estado', $request->estado);
         }
+        // Filtro por empleado (solo admin puede usarlo)
+        if ($request->filled('empleado_id') && Auth::user()->esAdmin()) {
+            $query->where('user_id', $request->empleado_id);
+        }
 
         $ventas    = $query->get();
         $productos = Producto::with('inventario')
             ->where('estado', 'activo')
             ->orderBy('nombre')
             ->get();
+
+        // Lista de empleados para el filtro (solo se usa en la vista si es admin)
+        $empleados = Auth::user()->esAdmin()
+            ? \App\Models\User::orderBy('nombre')->get()
+            : collect();
 
         // Métricas rápidas
         $ventasHoy   = Venta::whereDate('fecha_venta', today())
@@ -44,7 +54,7 @@ class VentaController extends Controller
             ->where('estado', '!=', 'anulada')->sum('total');
 
         return view('admin.ventas.index', compact(
-            'ventas', 'productos', 'ventasHoy', 'ingresosHoy'
+            'ventas', 'productos', 'ventasHoy', 'ingresosHoy', 'empleados'
         ));
     }
 
@@ -65,6 +75,23 @@ class VentaController extends Controller
             return back()->with('error', 'Agrega al menos un producto a la venta.');
         }
 
+        // Calcular subtotal anticipado para validar el descuento
+        $subtotalPreview = 0;
+        foreach ($items as $it) {
+            $subtotalPreview += (float)$it['precio'] * (int)$it['cantidad'];
+        }
+
+        // Validar descuento máximo desde configuración
+        $descMaxPct = (float) Configuracion::valor('descuento_maximo_porcentaje', 100);
+        $descMaxValor = $subtotalPreview * ($descMaxPct / 100);
+
+        if ($descuento > $subtotalPreview) {
+            return back()->with('error', 'El descuento no puede ser mayor que el subtotal de la venta.');
+        }
+        if ($descMaxPct < 100 && $descuento > $descMaxValor) {
+            return back()->with('error', "El descuento no puede superar el {$descMaxPct}% del subtotal (máximo $ " . number_format($descMaxValor, 0, ',', '.') . ").");
+        }
+
         // Capturar ID antes del closure — getAuthIdentifier() devuelve 'usuario' no el id numérico
         $userId = Auth::user()->id;
 
@@ -74,20 +101,28 @@ class VentaController extends Controller
                 foreach ($items as $it) {
                     $subtotal += (float)$it['precio'] * (int)$it['cantidad'];
                 }
-                $total = max(0, $subtotal - $descuento);
+
+                // IVA desde configuración (sobre subtotal - descuento)
+                $pctIva   = (float) Configuracion::valor('porcentaje_iva', 0);
+                $base     = max(0, $subtotal - $descuento);
+                $impuesto = $pctIva > 0 ? round($base * ($pctIva / 100), 2) : 0;
+                $total    = $base + $impuesto;
+
+                // Prefijo de factura desde configuración
+                $prefijo = Configuracion::valor('prefijo_factura', 'DS-');
 
                 // Crear cabecera de venta
                 $venta = Venta::create([
                     'fecha_venta' => today(),
                     'subtotal'    => $subtotal,
-                    'impuesto'    => 0,
+                    'impuesto'    => $impuesto,
                     'descuento'   => $descuento,
                     'total'       => $total,
                     'estado'      => 'completada',
                     'user_id'     => $userId,
                 ]);
 
-                $numFac = 'DS-' . str_pad($venta->id, 6, '0', STR_PAD_LEFT);
+                $numFac = $prefijo . str_pad($venta->id, 6, '0', STR_PAD_LEFT);
 
                 // Procesar cada ítem
                 foreach ($items as $it) {

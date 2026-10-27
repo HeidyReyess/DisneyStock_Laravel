@@ -5,6 +5,8 @@ namespace App\Http\Controllers;
 use App\Models\MovimientoInventario;
 use App\Models\Producto;
 use App\Models\Venta;
+use App\Models\Categoria;
+use App\Models\User;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -27,6 +29,10 @@ class ReporteController extends Controller
                 $desde = now()->startOfWeek(Carbon::MONDAY)->toDateString();
                 $hasta = today()->toDateString();
                 break;
+            case 'personalizado':
+                $desde = $request->get('desde', now()->startOfMonth()->toDateString());
+                $hasta = $request->get('hasta', today()->toDateString());
+                break;
             case 'mes':
             default:
                 $desde = now()->startOfMonth()->toDateString();
@@ -34,24 +40,35 @@ class ReporteController extends Controller
                 break;
         }
 
-        // Permitir fechas manuales en movimientos
+        // Movimientos siempre admiten rango manual
         if ($tipo === 'movimientos') {
             $desde = $request->get('desde', $desde);
             $hasta = $request->get('hasta', $hasta);
         }
 
-        $datos        = [];
-        $metricas     = null;
-        $ventasPorDia = [];
-        $topProductos = [];
+        $datos           = [];
+        $metricas        = null;
+        $ventasPorDia    = [];
+        $topProductos    = [];
+        $ventasPorCategoria = [];
+
+        // Filtros adicionales para ventas
+        $empleadoId  = $request->get('empleado_id', '');
+        $categoriaId = $request->get('categoria_id', '');
 
         switch ($tipo) {
 
             case 'ventas':
-                $datos = Venta::with(['factura', 'user'])
+                $queryVentas = Venta::with(['factura', 'user'])
                     ->whereBetween('fecha_venta', [$desde, $hasta])
-                    ->orderByDesc('fecha_venta')
-                    ->get();
+                    ->orderByDesc('fecha_venta');
+                if ($empleadoId) $queryVentas->where('user_id', $empleadoId);
+                if ($categoriaId) {
+                    $queryVentas->whereHas('detalles.producto', function ($q) use ($categoriaId) {
+                        $q->where('categoria_id', $categoriaId);
+                    });
+                }
+                $datos = $queryVentas->get();
 
                 $metricas = [
                     'total_ventas'      => $datos->where('estado', '!=', 'anulada')->sum('total'),
@@ -60,22 +77,39 @@ class ReporteController extends Controller
                     'anuladas'          => $datos->where('estado', 'anulada')->count(),
                 ];
 
-                $ventasPorDia = Venta::selectRaw('fecha_venta as dia, COUNT(*) as transacciones, COALESCE(SUM(total),0) as monto')
+                $ventasPorDiaQ = Venta::selectRaw('fecha_venta as dia, COUNT(*) as transacciones, COALESCE(SUM(total),0) as monto')
                     ->whereBetween('fecha_venta', [$desde, $hasta])
-                    ->where('estado', '!=', 'anulada')
-                    ->groupBy('fecha_venta')
-                    ->orderBy('fecha_venta')
-                    ->get();
+                    ->where('estado', '!=', 'anulada');
+                if ($empleadoId) $ventasPorDiaQ->where('user_id', $empleadoId);
+                $ventasPorDia = $ventasPorDiaQ->groupBy('fecha_venta')->orderBy('fecha_venta')->get();
 
-                $topProductos = DB::table('detalle_ventas as d')
+                $topQ = DB::table('detalle_ventas as d')
                     ->join('productos as p', 'p.id', '=', 'd.producto_id')
                     ->join('ventas as v', 'v.id', '=', 'd.venta_id')
                     ->whereBetween('v.fecha_venta', [$desde, $hasta])
-                    ->where('v.estado', '!=', 'anulada')
+                    ->where('v.estado', '!=', 'anulada');
+                if ($empleadoId) $topQ->where('v.user_id', $empleadoId);
+                if ($categoriaId) $topQ->where('p.categoria_id', $categoriaId);
+                $topProductos = $topQ
                     ->selectRaw('p.nombre, SUM(d.cantidad) as unidades, SUM(d.subtotal) as ingresos')
                     ->groupBy('p.id', 'p.nombre')
                     ->orderByDesc('unidades')
                     ->limit(5)
+                    ->get();
+
+                // Resumen por categoría
+                $catQ = DB::table('detalle_ventas as d')
+                    ->join('productos as p', 'p.id', '=', 'd.producto_id')
+                    ->join('categorias as c', 'c.id', '=', 'p.categoria_id')
+                    ->join('ventas as v', 'v.id', '=', 'd.venta_id')
+                    ->whereBetween('v.fecha_venta', [$desde, $hasta])
+                    ->where('v.estado', '!=', 'anulada');
+                if ($empleadoId) $catQ->where('v.user_id', $empleadoId);
+                if ($categoriaId) $catQ->where('p.categoria_id', $categoriaId);
+                $ventasPorCategoria = $catQ
+                    ->selectRaw('c.nombre_categoria, SUM(d.cantidad) as unidades, SUM(d.subtotal) as total')
+                    ->groupBy('c.id', 'c.nombre_categoria')
+                    ->orderByDesc('total')
                     ->get();
                 break;
 
@@ -112,11 +146,15 @@ class ReporteController extends Controller
         }
 
         $productosLista = Producto::where('estado', 'activo')->orderBy('nombre')->get();
+        $empleadosLista = \App\Models\User::orderBy('nombre')->get();
+        $categoriasLista = \App\Models\Categoria::orderBy('nombre_categoria')->get();
 
         return view('admin.reportes.index', compact(
             'tipo', 'periodo', 'desde', 'hasta',
             'datos', 'metricas', 'ventasPorDia', 'topProductos',
-            'productosLista'
+            'ventasPorCategoria',
+            'productosLista', 'empleadosLista', 'categoriasLista',
+            'empleadoId', 'categoriaId'
         ));
     }
 }

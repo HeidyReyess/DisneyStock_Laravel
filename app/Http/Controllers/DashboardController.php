@@ -11,29 +11,32 @@ class DashboardController extends Controller
     public function index()
     {
         $usuario = Auth::user()->load('rol');
+        $esAdmin = $usuario->esAdmin();
 
         // Fecha en español con Carbon
         $fechaHoy = ucfirst(Carbon::now()->locale('es')->isoFormat('dddd, D [de] MMMM [de] YYYY'));
 
-        // Productos activos
+        // Productos activos (siempre global)
         $productosActivos = DB::table('productos')
             ->where('estado', 'activo')
             ->count();
 
-        // Ventas hoy
-        $ventasHoy = DB::table('ventas')
+        // Ventas hoy — empleado ve solo las suyas
+        $ventasHoyQuery = DB::table('ventas')
             ->whereDate('fecha_venta', Carbon::today())
-            ->where('estado', '!=', 'anulada')
-            ->count();
+            ->where('estado', '!=', 'anulada');
+        if (!$esAdmin) $ventasHoyQuery->where('user_id', $usuario->id);
+        $ventasHoy = $ventasHoyQuery->count();
 
-        // Ingresos del mes actual
-        $ingresosMes = DB::table('ventas')
+        // Ingresos del mes — empleado ve solo los suyos
+        $ingresosMesQuery = DB::table('ventas')
             ->whereYear('fecha_venta', Carbon::now()->year)
             ->whereMonth('fecha_venta', Carbon::now()->month)
-            ->where('estado', '!=', 'anulada')
-            ->sum('total');
+            ->where('estado', '!=', 'anulada');
+        if (!$esAdmin) $ingresosMesQuery->where('user_id', $usuario->id);
+        $ingresosMes = $ingresosMesQuery->sum('total');
 
-        // Productos con stock bajo o igual al mínimo (solo activos)
+        // Productos con stock bajo o igual al mínimo (solo activos, siempre global)
         $stockBajo = DB::table('inventarios')
             ->join('productos', 'productos.id', '=', 'inventarios.producto_id')
             ->whereColumn('inventarios.cantidad_stock', '<=', 'inventarios.stock_minimo')
@@ -41,15 +44,21 @@ class DashboardController extends Controller
             ->where('productos.estado', 'activo')
             ->count();
 
-        // Últimas 5 ventas no anuladas con usuario
-        $ventasRecientes = \App\Models\Venta::with('user')
-            ->where('estado', '!=', 'anulada')
-            ->orderByDesc('fecha_venta')
-            ->orderByDesc('id')
-            ->limit(5)
+        // Alertas de stock activas con datos del producto e inventario
+        $alertasActivas = \App\Models\Alerta::with(['producto.inventario'])
+            ->where('estado', 'activa')
+            ->orderByDesc('fecha_alerta')
             ->get();
 
-        // Top 5 productos más vendidos (ventas no anuladas)
+        // Últimas 5 ventas no anuladas — empleado ve solo las suyas
+        $ventasRecientesQuery = \App\Models\Venta::with('user')
+            ->where('estado', '!=', 'anulada')
+            ->orderByDesc('fecha_venta')
+            ->orderByDesc('id');
+        if (!$esAdmin) $ventasRecientesQuery->where('user_id', $usuario->id);
+        $ventasRecientes = $ventasRecientesQuery->limit(5)->get();
+
+        // Top 5 productos más vendidos (ventas no anuladas, siempre global)
         $topProductos = DB::table('detalle_ventas')
             ->join('ventas', 'ventas.id', '=', 'detalle_ventas.venta_id')
             ->join('productos', 'productos.id', '=', 'detalle_ventas.producto_id')
@@ -66,11 +75,13 @@ class DashboardController extends Controller
 
         return view('admin.dashboard', compact(
             'usuario',
+            'esAdmin',
             'fechaHoy',
             'productosActivos',
             'ventasHoy',
             'ingresosMes',
             'stockBajo',
+            'alertasActivas',
             'ventasRecientes',
             'topProductos'
         ));

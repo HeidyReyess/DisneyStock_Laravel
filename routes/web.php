@@ -8,6 +8,7 @@ use App\Http\Controllers\ReporteController;
 use App\Http\Controllers\InventarioController;
 use App\Http\Controllers\VentaController;
 use App\Http\Controllers\UsuarioController;
+use App\Http\Controllers\ConfiguracionController;
 
 // ── Pública ───────────────────────────────────────────────
 Route::get('/', fn() => view('welcome'))->name('home');
@@ -66,5 +67,9 @@ Route::middleware(['auth', 'role:administrador', 'activo', 'no-cache'])->group(f
         ->name('usuarios.toggle');
     Route::patch('usuarios/{usuario}/reset-password', [UsuarioController::class, 'resetPassword'])
         ->name('usuarios.reset-password');
+
+    // Configuración — solo administrador
+    Route::get('/configuracion',  [ConfiguracionController::class, 'index'])->name('configuracion.index');
+    Route::post('/configuracion', [ConfiguracionController::class, 'update'])->name('configuracion.update');
 
 });

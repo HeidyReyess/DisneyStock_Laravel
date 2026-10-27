@@ -195,6 +195,10 @@
            class="sidebar-link {{ request()->routeIs('usuarios.*') ? 'active' : '' }}">
             <i class="fas fa-users-cog"></i> Usuarios
         </a>
+        <a href="{{ route('configuracion.index') }}"
+           class="sidebar-link {{ request()->routeIs('configuracion.*') ? 'active' : '' }}">
+            <i class="fas fa-gear"></i> Configuración
+        </a>
         @endif
     </nav>
 

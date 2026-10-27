@@ -1,5 +1,28 @@
 {{-- Partial: detalle de venta para modal AJAX --}}
+@php
+    $nombreNegocio  = \App\Models\Configuracion::valor('nombre_negocio', 'Variedades Disney');
+    $nitNegocio     = \App\Models\Configuracion::valor('nit_negocio', '');
+    $direccionNeg   = \App\Models\Configuracion::valor('direccion_negocio', '');
+    $telefonoNeg    = \App\Models\Configuracion::valor('telefono_negocio', '');
+    $pctIva         = (float) \App\Models\Configuracion::valor('porcentaje_iva', 0);
+@endphp
 <div style="font-size:.88rem; color:#374151;">
+
+    {{-- Encabezado del negocio --}}
+    <div style="text-align:center; padding-bottom:14px; margin-bottom:16px; border-bottom:1px solid #F5F3FF;">
+        <div style="font-family:'Outfit',sans-serif; font-size:1.05rem; font-weight:800; color:#1E1B4B;">
+            {{ $nombreNegocio }}
+        </div>
+        @if($nitNegocio)
+            <div style="font-size:.78rem; color:#6B7280; margin-top:2px;">NIT: {{ $nitNegocio }}</div>
+        @endif
+        @if($direccionNeg)
+            <div style="font-size:.78rem; color:#6B7280;">{{ $direccionNeg }}</div>
+        @endif
+        @if($telefonoNeg)
+            <div style="font-size:.78rem; color:#6B7280;">Tel: {{ $telefonoNeg }}</div>
+        @endif
+    </div>
 
     {{-- Cabecera --}}
     <div style="display:flex; justify-content:space-between; flex-wrap:wrap; gap:10px; margin-bottom:18px; padding-bottom:16px; border-bottom:1px solid #F5F3FF;">
@@ -55,6 +78,12 @@
         <div style="display:flex; justify-content:space-between; margin-bottom:6px; color:#DC2626;">
             <span>Descuento</span>
             <span>- $ {{ number_format($venta->descuento, 0, ',', '.') }}</span>
+        </div>
+        @endif
+        @if($venta->impuesto > 0)
+        <div style="display:flex; justify-content:space-between; margin-bottom:6px; color:#6B7280;">
+            <span>IVA ({{ $pctIva }}%)</span>
+            <span>$ {{ number_format($venta->impuesto, 0, ',', '.') }}</span>
         </div>
         @endif
         <div style="display:flex; justify-content:space-between; font-family:'Outfit',sans-serif; font-size:1.05rem; font-weight:800; color:#1E1B4B; border-top:1px solid #EDE9FE; padding-top:10px; margin-top:4px;">

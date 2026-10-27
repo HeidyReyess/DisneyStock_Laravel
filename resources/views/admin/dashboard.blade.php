@@ -94,14 +94,14 @@
         <div class="stat-icon purple"><i class="fas fa-cash-register"></i></div>
         <div>
             <div class="stat-value">{{ $ventasHoy }}</div>
-            <div class="stat-label">Ventas hoy</div>
+            <div class="stat-label">{{ $esAdmin ? 'Ventas hoy' : 'Mis ventas hoy' }}</div>
         </div>
     </div>
     <div class="stat-card">
         <div class="stat-icon purple"><i class="fas fa-dollar-sign"></i></div>
         <div>
             <div class="stat-value">$ {{ number_format($ingresosMes, 0, ',', '.') }}</div>
-            <div class="stat-label">Ingresos del mes</div>
+            <div class="stat-label">{{ $esAdmin ? 'Ingresos del mes' : 'Mis ingresos del mes' }}</div>
         </div>
     </div>
     {{-- [1] Ícono rojo solo si hay stock bajo; lila si es 0 --}}
@@ -122,7 +122,7 @@
     {{-- Ventas recientes --}}
     <div class="card">
         <div class="card-header">
-            <span class="card-title"><i class="fas fa-receipt" style="color:#7C3AED;margin-right:8px;"></i>Ventas recientes</span>
+            <span class="card-title"><i class="fas fa-receipt" style="color:#7C3AED;margin-right:8px;"></i>{{ $esAdmin ? 'Ventas recientes' : 'Mis ventas recientes' }}</span>
             <a href="{{ route('ventas.index') }}"
                style="font-size:.8rem;color:#7C3AED;text-decoration:none;font-weight:600;">Ver todas →</a>
         </div>
@@ -170,15 +170,49 @@
     <div class="card">
         <div class="card-header">
             <span class="card-title"><i class="fas fa-bell" style="color:#7C3AED;margin-right:8px;"></i>Alertas de stock</span>
-            <a href="{{ Route::has('inventario.index') ? route('inventario.index') : '#' }}"
-               onclick="{{ Route::has('inventario.index') ? 'return true' : 'proximamente(); return false' }}"
+            <a href="{{ route('inventario.index') }}"
                style="font-size:.8rem;color:#7C3AED;text-decoration:none;font-weight:600;">Ver inventario →</a>
         </div>
-        <div class="card-body">
-            <div class="empty-state">
-                <i class="fas fa-bell-slash"></i>
-                <p>No hay alertas activas de stock bajo.</p>
-            </div>
+        <div class="card-body" style="padding:0 0 4px;">
+            @forelse($alertasActivas as $alerta)
+                @if($loop->first)
+                <div class="table-wrap">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Producto</th>
+                            <th>Stock</th>
+                            <th>Mínimo</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                @endif
+                        <tr>
+                            <td>
+                                <a href="{{ route('inventario.index', ['producto_id' => $alerta->producto_id]) }}"
+                                   style="color:#DC2626;font-weight:600;text-decoration:none;">
+                                    <i class="fas fa-triangle-exclamation" style="font-size:.75rem;margin-right:4px;"></i>
+                                    {{ $alerta->producto?->nombre ?? '—' }}
+                                </a>
+                            </td>
+                            <td style="font-weight:700;color:#DC2626;">
+                                {{ $alerta->producto?->inventario?->cantidad_stock ?? '—' }}
+                            </td>
+                            <td style="color:#6B7280;">
+                                {{ $alerta->producto?->inventario?->stock_minimo ?? '—' }}
+                            </td>
+                        </tr>
+                @if($loop->last)
+                    </tbody>
+                </table>
+                </div>
+                @endif
+            @empty
+                <div class="empty-state" style="padding:24px 16px;">
+                    <i class="fas fa-bell-slash"></i>
+                    <p>No hay alertas activas de stock bajo.</p>
+                </div>
+            @endforelse
         </div>
     </div>
 

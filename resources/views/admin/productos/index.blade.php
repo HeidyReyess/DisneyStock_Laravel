@@ -308,7 +308,7 @@
                     <label class="form-label">Stock mínimo <span style="color:#EF4444">*</span></label>
                     {{-- [6] min="1" —debe tener al menos 1 de mínimo --}}
                     <input type="number" name="stock_minimo" class="form-input {{ $errors->has('stock_minimo') ? 'is-invalid' : '' }}"
-                        value="{{ old('stock_minimo', 1) }}" min="1" step="1">
+                        value="{{ old('stock_minimo', \App\Models\Configuracion::valor('stock_minimo_defecto', 1)) }}" min="1" step="1">
                     @error('stock_minimo') <div class="invalid-msg"><i class="fas fa-circle-exclamation"></i> {{ $message }}</div> @enderror
                 </div>
 
