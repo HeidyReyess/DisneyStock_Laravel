@@ -128,6 +128,10 @@
     }
     .stock-info-box .num { font-family:'Outfit',sans-serif; font-size:1.6rem; font-weight:800; color:#4A1D96; }
     .stock-info-box .lbl { font-size:.8rem; color:#6B7280; }
+
+    @media (max-width: 768px) {
+        .col-actualizado { display: none !important; }
+    }
 </style>
 
 {{-- Banner alerta stock bajo --}}
@@ -199,7 +203,7 @@
                         <th>Stock</th>
                         <th>Mínimo</th>
                         <th>Estado</th>
-                        <th>Actualizado</th>
+                        <th class="col-actualizado">Actualizado</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -241,7 +245,7 @@
                                 {{ $bajo ? 'Bajo' : 'Normal' }}
                             </span>
                         </td>
-                        <td style="font-size:.8rem; color:#9CA3AF;">
+                        <td class="col-actualizado" style="font-size:.8rem; color:#9CA3AF;">
                             {{ $inv?->fecha_actualizacion?->format('d/m/Y') ?? '—' }}
                         </td>
                     </tr>

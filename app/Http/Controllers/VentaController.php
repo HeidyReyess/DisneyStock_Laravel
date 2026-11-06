@@ -24,6 +24,11 @@ class VentaController extends Controller
 
         $esAdmin = Auth::user()->esAdmin();
 
+        // El empleado solo ve sus propias ventas en el listado
+        if (!$esAdmin) {
+            $query->where('user_id', Auth::id());
+        }
+
         // Proveedores y productos para filtros (solo admin)
         $proveedores = $esAdmin
             ? Producto::whereNotNull('proveedor')
@@ -50,6 +55,13 @@ class VentaController extends Controller
             && $request->desde > $request->hasta;
 
         if ($rangoInvalido) {
+            $vhQuery = Venta::whereDate('fecha_venta', today())->where('estado', '!=', 'anulada');
+            $ihQuery = Venta::whereDate('fecha_venta', today())->where('estado', '!=', 'anulada');
+            if (!$esAdmin) {
+                $vhQuery->where('user_id', Auth::id());
+                $ihQuery->where('user_id', Auth::id());
+            }
+
             return view('admin.ventas.index', [
                 'ventas'          => collect(),
                 'productos'       => Producto::with('inventario')->where('estado', 'activo')->orderBy('nombre')->get(),
@@ -57,8 +69,8 @@ class VentaController extends Controller
                 'productosFiltro' => $productosFiltro,
                 'proveedores'     => $proveedores,
                 'descuentoMaxPct' => $descuentoMaxPct,
-                'ventasHoy'       => Venta::whereDate('fecha_venta', today())->where('estado', '!=', 'anulada')->count(),
-                'ingresosHoy'     => Venta::whereDate('fecha_venta', today())->where('estado', '!=', 'anulada')->sum('total'),
+                'ventasHoy'       => $vhQuery->count(),
+                'ingresosHoy'     => $ihQuery->sum('total'),
                 'rangoInvalido'   => true,
             ]);
         }
@@ -95,11 +107,16 @@ class VentaController extends Controller
             ->orderBy('nombre')
             ->get();
 
-        // Métricas rápidas
-        $ventasHoy   = Venta::whereDate('fecha_venta', today())
-            ->where('estado', '!=', 'anulada')->count();
-        $ingresosHoy = Venta::whereDate('fecha_venta', today())
-            ->where('estado', '!=', 'anulada')->sum('total');
+        // Métricas rápidas (empleado solo ve las suyas)
+        $ventasHoyQuery   = Venta::whereDate('fecha_venta', today())->where('estado', '!=', 'anulada');
+        $ingresosHoyQuery = Venta::whereDate('fecha_venta', today())->where('estado', '!=', 'anulada');
+        if (!$esAdmin) {
+            $ventasHoyQuery->where('user_id', Auth::id());
+            $ingresosHoyQuery->where('user_id', Auth::id());
+        }
+
+        $ventasHoy   = $ventasHoyQuery->count();
+        $ingresosHoy = $ingresosHoyQuery->sum('total');
 
         return view('admin.ventas.index', compact(
             'ventas', 'productos', 'ventasHoy', 'ingresosHoy', 'empleados', 'productosFiltro', 'proveedores', 'descuentoMaxPct'
@@ -272,6 +289,11 @@ class VentaController extends Controller
     // GET /ventas/{venta} — detalle en modal (AJAX)
     public function show(Venta $venta)
     {
+        // El empleado solo puede ver el detalle de sus propias ventas
+        if (!Auth::user()->esAdmin() && $venta->user_id !== Auth::id()) {
+            abort(403, 'No tienes permiso para ver el detalle de esta venta.');
+        }
+
         $venta->load(['factura', 'user', 'detalles.producto']);
         return view('admin.ventas.partials.detalle', compact('venta'));
     }
@@ -309,8 +331,9 @@ class VentaController extends Controller
         }
 
         // Capturar ID antes del closure
-        $userId   = Auth::user()->id;
-        $numFac   = $venta->factura?->numero ?? "#{$venta->id}";
+        $userId = Auth::user()->id;
+        $venta->loadMissing('factura');
+        $numFac = $venta->factura?->numero ?? ('DS-' . str_pad($venta->id, 6, '0', STR_PAD_LEFT));
 
         try {
             DB::transaction(function () use ($venta, $userId, $numFac) {
@@ -355,6 +378,6 @@ class VentaController extends Controller
         }
 
         return redirect()->route('ventas.index')
-            ->with('success', "Venta #{$venta->id} anulada. El stock fue restaurado.");
+            ->with('success', "Venta {$numFac} anulada. El stock fue restaurado.");
     }
 }

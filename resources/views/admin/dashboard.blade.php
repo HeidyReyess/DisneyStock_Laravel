@@ -133,7 +133,7 @@
                 <table>
                     <thead>
                         <tr>
-                            <th># Venta</th>
+                            <th>Comprobante</th>
                             <th>Fecha</th>
                             <th>Empleado</th>
                             <th>Total</th>
@@ -145,7 +145,7 @@
                             <td>
                                 <a href="{{ route('ventas.show', $venta) }}"
                                    style="color:#5B21B6;font-weight:600;text-decoration:none;">
-                                    #{{ $venta->id }}
+                                    {{ $venta->factura?->numero ?? ('DS-' . str_pad($venta->id, 6, '0', STR_PAD_LEFT)) }}
                                 </a>
                             </td>
                             <td>{{ $venta->fecha_venta->format('d/m/Y') }}</td>
@@ -219,6 +219,7 @@
 </div>
 
 {{-- Productos más vendidos + accesos rápidos --}}
+@if($esAdmin)
 <div class="grid-2">
 
     {{-- Productos más vendidos --}}
@@ -297,5 +298,27 @@
     </div>
 
 </div>
+@else
+{{-- Accesos rápidos para empleado (sin panel de productos más vendidos) --}}
+<div class="card" style="margin-bottom: 28px;">
+    <div class="card-header">
+        <span class="card-title"><i class="fas fa-bolt" style="color:#7C3AED;margin-right:8px;"></i>Accesos rápidos</span>
+    </div>
+    <div class="card-body">
+        <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(200px, 1fr));gap:12px;">
+            <a href="{{ route('ventas.index') }}"
+               style="display:flex;flex-direction:column;align-items:center;gap:8px;padding:16px 12px;background:#F5F3FF;border-radius:12px;text-decoration:none;transition:background .2s;" onmouseover="this.style.background='#EDE9FE'" onmouseout="this.style.background='#F5F3FF'">
+                <i class="fas fa-plus-circle" style="font-size:1.4rem;color:#7C3AED;"></i>
+                <span style="font-size:.8rem;font-weight:600;color:#1E1B4B;">Nueva venta</span>
+            </a>
+            <a href="{{ route('inventario.index') }}"
+               style="display:flex;flex-direction:column;align-items:center;gap:8px;padding:16px 12px;background:#F5F3FF;border-radius:12px;text-decoration:none;transition:background .2s;" onmouseover="this.style.background='#EDE9FE'" onmouseout="this.style.background='#F5F3FF'">
+                <i class="fas fa-warehouse" style="font-size:1.4rem;color:#7C3AED;"></i>
+                <span style="font-size:.8rem;font-weight:600;color:#1E1B4B;">Ver inventario</span>
+            </a>
+        </div>
+    </div>
+</div>
+@endif
 
 @endsection

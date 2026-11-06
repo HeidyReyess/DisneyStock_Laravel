@@ -41,9 +41,6 @@ Route::middleware(['auth', 'activo', 'no-cache'])->group(function () {
     Route::get('/ventas/{venta}/comprobante', [VentaController::class, 'comprobante'])
         ->name('ventas.comprobante');
 
-    // Reportes — admin y empleado
-    Route::get('/reportes', [ReporteController::class, 'index'])->name('reportes.index');
-
 });
 
 // ═══════════════════════════════════════════════════════════
@@ -78,7 +75,8 @@ Route::middleware(['auth', 'role:administrador', 'activo', 'no-cache'])->group(f
     Route::get('/configuracion/backups/{archivo}/descargar', [ConfiguracionController::class, 'descargarBackup'])->name('configuracion.backups.descargar');
     Route::delete('/configuracion/backups/{archivo}', [ConfiguracionController::class, 'eliminarBackup'])->name('configuracion.backups.eliminar');
 
-    // Exportación de reportes — solo administrador
+    // Reportes y exportación — solo administrador (RF 17)
+    Route::get('/reportes',              [ReporteController::class, 'index'])->name('reportes.index');
     Route::get('/reportes/export/pdf',   [ReporteController::class, 'exportPdf'])->name('reportes.export.pdf');
     Route::get('/reportes/export/excel', [ReporteController::class, 'exportExcel'])->name('reportes.export.excel');
 

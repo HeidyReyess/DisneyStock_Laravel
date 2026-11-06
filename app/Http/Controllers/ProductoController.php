@@ -15,8 +15,15 @@ class ProductoController extends Controller
     // GET /productos
     public function index(Request $request)
     {
+        $esAdmin = Auth::user()->esAdmin();
+
         $query = Producto::with(['categoria', 'inventario'])
             ->orderBy('nombre');
+
+        // El empleado solo ve productos activos (CU RF-28)
+        if (!$esAdmin) {
+            $query->where('estado', 'activo');
+        }
 
         if ($request->filled('q')) {
             $query->where('nombre', 'like', '%' . $request->q . '%');
@@ -24,7 +31,7 @@ class ProductoController extends Controller
         if ($request->filled('categoria')) {
             $query->where('categoria_id', $request->categoria);
         }
-        if ($request->filled('estado')) {
+        if ($esAdmin && $request->filled('estado')) {
             $query->where('estado', $request->estado);
         }
 

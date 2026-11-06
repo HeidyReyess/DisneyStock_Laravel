@@ -256,13 +256,16 @@
                 <label class="form-label">Contraseña <span style="color:#EF4444">*</span></label>
                 <div class="input-wrap">
                     <i class="fas fa-lock ico"></i>
-                    <input type="password" name="password" id="pwdCrear" class="form-input {{ $errors->has('password') ? 'is-invalid' : '' }}"
+                    <input type="password" name="password" id="pwdCrear" class="form-input {{ $errors->has('password') && !in_array(old('_method'), ['PATCH', 'PUT']) ? 'is-invalid' : '' }}"
                         placeholder="Mínimo 8 caracteres">
                     <button type="button" class="btn-eye" onclick="togglePwd('pwdCrear', 'eyeCrear')">
                         <i class="fas fa-eye" id="eyeCrear"></i>
                     </button>
                 </div>
-                @error('password') <div class="invalid-msg">{{ $message }}</div> @enderror
+                <div style="font-size:.76rem; color:#6B7280; margin-top:4px;">Mínimo 8 caracteres, con letras y números.</div>
+                @if(!in_array(old('_method'), ['PATCH', 'PUT']))
+                    @error('password') <div class="invalid-msg">{{ $message }}</div> @enderror
+                @endif
             </div>
 
             <div class="form-group">
@@ -293,27 +296,37 @@
 
         <form method="POST" id="formEditar" action="">
             @csrf @method('PUT')
+            <input type="hidden" name="edit_user_id" id="edit_user_id" value="{{ old('edit_user_id') }}">
             <div class="form-group">
                 <label class="form-label">Nombre completo <span style="color:#EF4444">*</span></label>
                 <div class="input-wrap">
                     <i class="fas fa-id-card ico"></i>
-                    <input type="text" id="edit_nombre" name="nombre" class="form-input" maxlength="150" autocomplete="off">
+                    <input type="text" id="edit_nombre" name="nombre" class="form-input {{ $errors->has('nombre') && old('_method') === 'PUT' ? 'is-invalid' : '' }}" maxlength="150" autocomplete="off">
                 </div>
+                @if(old('_method') === 'PUT')
+                    @error('nombre') <div class="invalid-msg">{{ $message }}</div> @enderror
+                @endif
             </div>
             <div class="form-group">
                 <label class="form-label">Nombre de usuario <span style="color:#EF4444">*</span></label>
                 <div class="input-wrap">
                     <i class="fas fa-at ico"></i>
-                    <input type="text" id="edit_usuario" name="usuario" class="form-input" maxlength="80" autocomplete="off">
+                    <input type="text" id="edit_usuario" name="usuario" class="form-input {{ $errors->has('usuario') && old('_method') === 'PUT' ? 'is-invalid' : '' }}" maxlength="80" autocomplete="off">
                 </div>
+                @if(old('_method') === 'PUT')
+                    @error('usuario') <div class="invalid-msg">{{ $message }}</div> @enderror
+                @endif
             </div>
             <div class="form-group">
                 <label class="form-label">Rol <span style="color:#EF4444">*</span></label>
-                <select id="edit_rol" name="rol_id" class="form-select">
+                <select id="edit_rol" name="rol_id" class="form-select {{ $errors->has('rol_id') && old('_method') === 'PUT' ? 'is-invalid' : '' }}">
                     @foreach($roles as $rol)
                         <option value="{{ $rol->id }}">{{ ucfirst($rol->nombre) }}</option>
                     @endforeach
                 </select>
+                @if(old('_method') === 'PUT')
+                    @error('rol_id') <div class="invalid-msg">{{ $message }}</div> @enderror
+                @endif
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn-cancelar" onclick="cerrarModal('modalEditar')">Cancelar</button>
@@ -332,21 +345,27 @@
         <button class="modal-close" onclick="cerrarModal('modalPass')"><i class="fas fa-xmark"></i></button>
         <div class="modal-title"><i class="fas fa-key"></i> Restablecer contraseña</div>
         <p style="font-size:.86rem; color:#6B7280; margin-bottom:18px;">
-            Estás restableciendo la contraseña de <strong id="passUsuarioNombre"></strong>.
+            Estás restableciendo la contraseña de <strong id="passUsuarioNombre">{{ old('reset_user_nombre') }}</strong>.
         </p>
 
-        <form method="POST" id="formPass" action="">
+        <form method="POST" id="formPass" action="{{ old('reset_user_id') ? url('usuarios/' . old('reset_user_id') . '/reset-password') : '' }}">
             @csrf @method('PATCH')
+            <input type="hidden" name="reset_user_id" id="reset_user_id" value="{{ old('reset_user_id') }}">
+            <input type="hidden" name="reset_user_nombre" id="reset_user_nombre" value="{{ old('reset_user_nombre') }}">
             <div class="form-group">
                 <label class="form-label">Nueva contraseña <span style="color:#EF4444">*</span></label>
                 <div class="input-wrap">
                     <i class="fas fa-lock ico"></i>
-                    <input type="password" name="password" id="pwdReset" class="form-input"
+                    <input type="password" name="password" id="pwdReset" class="form-input {{ $errors->has('password') && old('_method') === 'PATCH' ? 'is-invalid' : '' }}"
                         placeholder="Mínimo 8 caracteres">
                     <button type="button" class="btn-eye" onclick="togglePwd('pwdReset', 'eyeReset')">
                         <i class="fas fa-eye" id="eyeReset"></i>
                     </button>
                 </div>
+                <div style="font-size:.76rem; color:#6B7280; margin-top:4px;">Mínimo 8 caracteres, con letras y números.</div>
+                @if(old('_method') === 'PATCH')
+                    @error('password') <div class="invalid-msg">{{ $message }}</div> @enderror
+                @endif
             </div>
             <div class="form-group">
                 <label class="form-label">Confirmar contraseña <span style="color:#EF4444">*</span></label>
@@ -411,6 +430,7 @@
 
     function abrirModalEditar(id, nombre, usuario, rolId) {
         document.getElementById('formEditar').action = '{{ url('usuarios') }}/' + id;
+        document.getElementById('edit_user_id').value = id;
         document.getElementById('edit_nombre').value  = nombre;
         document.getElementById('edit_usuario').value = usuario;
         const sel = document.getElementById('edit_rol');
@@ -421,6 +441,8 @@
     function abrirModalPass(id, usuario) {
         document.getElementById('formPass').action = '{{ url('usuarios') }}/' + id + '/reset-password';
         document.getElementById('passUsuarioNombre').textContent = usuario;
+        document.getElementById('reset_user_id').value = id;
+        document.getElementById('reset_user_nombre').value = usuario;
         document.getElementById('pwdReset').value = '';
         abrirModal('modalPass');
     }
@@ -439,7 +461,13 @@
     });
 
     @if($errors->any())
-        abrirModal('modalCrear');
+        @if(old('_method') === 'PATCH')
+            abrirModalPass('{{ old('reset_user_id') }}', '{{ addslashes(old('reset_user_nombre', '')) }}');
+        @elseif(old('_method') === 'PUT')
+            abrirModalEditar('{{ old('edit_user_id') }}', '{{ addslashes(old('nombre', '')) }}', '{{ addslashes(old('usuario', '')) }}', '{{ old('rol_id') }}');
+        @else
+            abrirModal('modalCrear');
+        @endif
     @endif
 </script>
 @endsection

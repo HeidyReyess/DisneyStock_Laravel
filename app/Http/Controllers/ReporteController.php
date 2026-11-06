@@ -18,9 +18,13 @@ use Maatwebsite\Excel\Facades\Excel;
 
 class ReporteController extends Controller
 {
-    // GET /reportes
+    // GET /reportes — solo administrador (RF 17)
     public function index(Request $request)
     {
+        if (!Auth::user()->esAdmin()) {
+            abort(403, 'No tienes permiso para acceder a esta sección.');
+        }
+
         $reporte = $this->obtenerDatosReporte($request);
 
         if ($reporte['rangoInvalido']) {

@@ -93,14 +93,14 @@
             <div class="metric-icon purple"><i class="fas fa-cash-register"></i></div>
             <div>
                 <div class="metric-val">{{ $ventasHoy }}</div>
-                <div class="metric-lbl">Ventas hoy</div>
+                <div class="metric-lbl">{{ Auth::user()->esAdmin() ? 'Ventas hoy' : 'Mis ventas hoy' }}</div>
             </div>
         </div>
         <div class="metric-card">
             <div class="metric-icon green"><i class="fas fa-dollar-sign"></i></div>
             <div>
                 <div class="metric-val">$ {{ number_format($ingresosHoy, 0, ',', '.') }}</div>
-                <div class="metric-lbl">Ingresos hoy</div>
+                <div class="metric-lbl">{{ Auth::user()->esAdmin() ? 'Ingresos hoy' : 'Mis ingresos hoy' }}</div>
             </div>
         </div>
     </div>

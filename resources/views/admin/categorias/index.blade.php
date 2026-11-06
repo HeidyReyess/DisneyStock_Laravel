@@ -112,6 +112,10 @@
         cursor:pointer; transition:all .2s;
     }
     .btn-guardar:hover { background:#7C3AED; border-color:#7C3AED; }
+
+    @media (max-width: 768px) {
+        .col-creada { display: none !important; }
+    }
 </style>
 
 {{-- Toolbar --}}
@@ -136,7 +140,7 @@
                     <th>Nombre</th>
                     <th>Descripción</th>
                     <th>Productos</th>
-                    <th>Creada</th>
+                    <th class="col-creada">Creada</th>
                     <th>Acciones</th>
                 </tr>
             </thead>
@@ -151,7 +155,7 @@
                             {{ $cat->productos_count }}
                         </span>
                     </td>
-                    <td style="color:#9CA3AF; font-size:.82rem;">{{ $cat->created_at->format('d/m/Y') }}</td>
+                    <td class="col-creada" style="color:#9CA3AF; font-size:.82rem;">{{ $cat->created_at->format('d/m/Y') }}</td>
                     <td>
                         <div style="display:flex; gap:6px;">
                             <button class="btn-accion btn-editar"

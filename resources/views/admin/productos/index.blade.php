@@ -137,13 +137,15 @@
                 </option>
             @endforeach
         </select>
+        @if(Auth::user()->esAdmin())
         <select name="estado" class="filter-input" style="min-width:120px;">
             <option value="">Todos</option>
             <option value="activo"   {{ request('estado') === 'activo'   ? 'selected' : '' }}>Activos</option>
             <option value="inactivo" {{ request('estado') === 'inactivo' ? 'selected' : '' }}>Inactivos</option>
         </select>
+        @endif
         <button type="submit" class="btn-filtrar"><i class="fas fa-filter"></i> Filtrar</button>
-        @if(request()->hasAny(['q','categoria','estado']))
+        @if(request()->hasAny(['q','categoria']) || (Auth::user()->esAdmin() && request()->has('estado')))
             <a href="{{ route('productos.index') }}" class="btn-filtrar" style="text-decoration:none;">
                 <i class="fas fa-xmark"></i> Limpiar
             </a>

@@ -51,7 +51,7 @@ class DashboardController extends Controller
             ->get();
 
         // Últimas 5 ventas no anuladas — empleado ve solo las suyas
-        $ventasRecientesQuery = \App\Models\Venta::with('user')
+        $ventasRecientesQuery = \App\Models\Venta::with(['user', 'factura'])
             ->where('estado', '!=', 'anulada')
             ->orderByDesc('fecha_venta')
             ->orderByDesc('id');

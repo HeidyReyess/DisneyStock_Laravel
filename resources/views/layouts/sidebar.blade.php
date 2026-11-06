@@ -97,6 +97,7 @@
             display: flex; align-items: center; gap: 10px;
             padding: 20px 20px 16px;
             border-bottom: 1px solid rgba(255,255,255,.08);
+            flex-shrink: 0;
         }
         .sidebar-brand img { height: 40px; width: auto; object-fit: contain; }
         .sidebar-brand span {
@@ -105,6 +106,15 @@
             color: #fff; letter-spacing: -.5px;
         }
         .sidebar-nav { flex: 1; padding: 16px 12px; overflow-y: auto; }
+        .sidebar::-webkit-scrollbar,
+        .sidebar-nav::-webkit-scrollbar {
+            width: 5px;
+        }
+        .sidebar::-webkit-scrollbar-thumb,
+        .sidebar-nav::-webkit-scrollbar-thumb {
+            background: rgba(255,255,255,.18);
+            border-radius: 4px;
+        }
         .sidebar-section {
             font-size: .68rem; font-weight: 700; letter-spacing: .1em;
             color: rgba(255,255,255,.35);
@@ -126,6 +136,7 @@
         .sidebar-footer {
             padding: 16px 12px;
             border-top: 1px solid rgba(255,255,255,.08);
+            flex-shrink: 0;
         }
         .sidebar-user {
             display: flex; align-items: center; gap: 10px;
@@ -648,9 +659,25 @@
             .sidebar {
                 transform: translateX(-100%);
                 box-shadow: 0 0 35px rgba(0, 0, 0, .45);
+                overflow-y: auto !important;
+                -webkit-overflow-scrolling: touch;
+                height: 100vh;
+                height: 100dvh;
             }
             .sidebar.open {
                 transform: translateX(0);
+            }
+            .sidebar-brand {
+                flex-shrink: 0;
+            }
+            .sidebar-nav {
+                overflow-y: visible !important;
+                flex: none !important;
+            }
+            .sidebar-footer {
+                flex-shrink: 0;
+                margin-top: auto;
+                padding-bottom: calc(18px + env(safe-area-inset-bottom, 8px));
             }
 
             .main-wrapper {
@@ -676,6 +703,12 @@
             }
             .card {
                 overflow-x: auto;
+            }
+
+            /* Columnas ocultas en móvil para tablas más compactas */
+            .col-creada,
+            .col-actualizado {
+                display: none !important;
             }
 
             /* Filtros y tarjetas apilados en una columna */
@@ -766,10 +799,12 @@
            class="sidebar-link {{ request()->routeIs('ventas.*') ? 'active' : '' }}">
             <i class="fas fa-cash-register"></i> Ventas
         </a>
+        @if(Auth::user()->esAdmin())
         <a href="{{ route('reportes.index') }}"
            class="sidebar-link {{ request()->routeIs('reportes.*') ? 'active' : '' }}">
             <i class="fas fa-chart-bar"></i> Reportes
         </a>
+        @endif
 
         @if(Auth::user()->esAdmin())
         <div class="sidebar-section">Administración</div>
