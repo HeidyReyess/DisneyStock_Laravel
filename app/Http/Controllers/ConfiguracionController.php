@@ -4,7 +4,9 @@ namespace App\Http\Controllers;
 
 use App\Models\Configuracion;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\File;
+use Symfony\Component\Process\Process;
 
 class ConfiguracionController extends Controller
 {
@@ -14,7 +16,23 @@ class ConfiguracionController extends Controller
         // Carga todas las claves en un array asociativo para la vista
         $config = Configuracion::all()->pluck('valor', 'clave');
 
-        return view('admin.configuracion.index', compact('config'));
+        // Carga lista de copias de seguridad existentes
+        $backupDir = storage_path('app/backups');
+        $backups = [];
+        if (File::exists($backupDir)) {
+            $archivos = File::glob($backupDir . '/backup_*.sql') ?: [];
+            usort($archivos, fn($a, $b) => filemtime($b) <=> filemtime($a));
+            foreach ($archivos as $archivo) {
+                $nombre = basename($archivo);
+                $backups[] = [
+                    'nombre' => $nombre,
+                    'fecha'  => date('d/m/Y H:i', filemtime($archivo)),
+                    'tamano' => $this->formatearTamano(filesize($archivo)),
+                ];
+            }
+        }
+
+        return view('admin.configuracion.index', compact('config', 'backups'));
     }
 
     // POST /configuracion
@@ -64,5 +82,121 @@ class ConfiguracionController extends Controller
 
         return redirect()->route('configuracion.index')
             ->with('success', 'Configuración guardada correctamente.');
+    }
+
+    // POST /configuracion/backups — generar copia de seguridad con mysqldump
+    public function generarBackup()
+    {
+        if (!Auth::user()->esAdmin()) abort(403);
+
+        $mysqldumpPath = env('MYSQLDUMP_PATH');
+        if (empty($mysqldumpPath) || !file_exists($mysqldumpPath)) {
+            return redirect()->route('configuracion.index')
+                ->with('error', "No se encontró el ejecutable mysqldump en la ruta configurada (" . ($mysqldumpPath ?: 'no definida') . "). Verifica la variable MYSQLDUMP_PATH en el archivo .env.");
+        }
+
+        $backupDir = storage_path('app/backups');
+        if (!File::exists($backupDir)) {
+            File::makeDirectory($backupDir, 0755, true);
+        }
+
+        $nombreArchivo = 'backup_' . now()->format('Y-m-d_H-i') . '.sql';
+        $destino = $backupDir . DIRECTORY_SEPARATOR . $nombreArchivo;
+
+        $host     = config('database.connections.mysql.host', '127.0.0.1');
+        if ($host === 'localhost') {
+            $host = '127.0.0.1';
+        }
+        $port     = config('database.connections.mysql.port', '3306');
+        $database = config('database.connections.mysql.database', 'disney_stock');
+        $username = config('database.connections.mysql.username', 'root');
+        $password = config('database.connections.mysql.password', '');
+
+        // Comando mysqldump que incluye estructura completa (CREATE TABLE) y datos
+        $comando = [
+            $mysqldumpPath,
+            "--host={$host}",
+            "--port={$port}",
+            "--user={$username}",
+            '--add-drop-table',
+            '--create-options',
+            '--quick',
+            '--extended-insert',
+        ];
+        if (!empty($password)) {
+            $comando[] = "--password={$password}";
+        }
+        $comando[] = $database;
+
+        try {
+            $proceso = new Process($comando);
+            $proceso->setTimeout(180);
+            $proceso->run();
+
+            if (!$proceso->isSuccessful()) {
+                $errorMsg = trim($proceso->getErrorOutput());
+                return redirect()->route('configuracion.index')
+                    ->with('error', "Error al generar la copia de seguridad: " . ($errorMsg ?: 'mysqldump falló sin mensaje detallado.'));
+            }
+
+            File::put($destino, $proceso->getOutput());
+
+            return redirect()->route('configuracion.index')
+                ->with('success', "Copia de seguridad \"{$nombreArchivo}\" generada correctamente.");
+        } catch (\Throwable $e) {
+            return redirect()->route('configuracion.index')
+                ->with('error', "Error inesperado al generar la copia de seguridad: {$e->getMessage()}");
+        }
+    }
+
+    // GET /configuracion/backups/{archivo}/descargar
+    public function descargarBackup($archivo)
+    {
+        if (!Auth::user()->esAdmin()) abort(403);
+
+        if (basename($archivo) !== $archivo || !preg_match('/^backup_[0-9_-]+\.sql$/', $archivo)) {
+            abort(404);
+        }
+
+        $path = storage_path('app/backups/' . $archivo);
+        if (!File::exists($path)) {
+            return redirect()->route('configuracion.index')
+                ->with('error', 'El archivo de copia de seguridad no existe o fue eliminado.');
+        }
+
+        return response()->download($path, $archivo, [
+            'Content-Type' => 'application/sql',
+        ]);
+    }
+
+    // DELETE /configuracion/backups/{archivo}
+    public function eliminarBackup($archivo)
+    {
+        if (!Auth::user()->esAdmin()) abort(403);
+
+        if (basename($archivo) !== $archivo || !preg_match('/^backup_[0-9_-]+\.sql$/', $archivo)) {
+            abort(404);
+        }
+
+        $path = storage_path('app/backups/' . $archivo);
+        if (!File::exists($path)) {
+            return redirect()->route('configuracion.index')
+                ->with('error', 'El archivo de copia de seguridad no existe.');
+        }
+
+        File::delete($path);
+
+        return redirect()->route('configuracion.index')
+            ->with('success', "Copia de seguridad \"{$archivo}\" eliminada correctamente.");
+    }
+
+    private function formatearTamano($bytes): string
+    {
+        if ($bytes >= 1048576) {
+            return number_format($bytes / 1048576, 2, ',', '.') . ' MB';
+        } elseif ($bytes >= 1024) {
+            return number_format($bytes / 1024, 1, ',', '.') . ' KB';
+        }
+        return $bytes . ' B';
     }
 }

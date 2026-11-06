@@ -15,6 +15,19 @@
     }
     .filter-btn.active, .filter-btn:hover { background:#4A1D96; color:#fff; border-color:#4A1D96; }
     .filter-btn:not(.active) { background:#F5F3FF; color:#5B21B6; }
+    .filter-input {
+        padding:8px 12px; border:1.5px solid #E5E7EB; border-radius:9px;
+        font-size:.85rem; color:#1E1B4B; background:#fff; min-width:160px;
+        transition:border-color .2s;
+    }
+    .filter-input:focus { outline:none; border-color:#7C3AED; }
+    .btn-filtrar {
+        padding:8px 16px; background:#F5F3FF; color:#5B21B6;
+        border:1.5px solid #DDD6FE; border-radius:9px;
+        font-size:.85rem; font-weight:600; cursor:pointer; transition:all .2s;
+        display:inline-flex; align-items:center; gap:6px;
+    }
+    .btn-filtrar:hover { background:#EDE9FE; }
     .btn-nuevo {
         display:inline-flex; align-items:center; gap:8px;
         padding:10px 20px; background:#4A1D96; color:#fff;
@@ -129,23 +142,43 @@
 @endif
 
 {{-- Toolbar --}}
-<div class="toolbar">
-    <div class="filters">
-        <a href="{{ route('inventario.index') }}"
-           class="filter-btn {{ !request('filtro') ? 'active' : '' }}">
-            <i class="fas fa-list"></i> Todos
-        </a>
-        <a href="{{ route('inventario.index', ['filtro' => 'bajo']) }}"
-           class="filter-btn {{ request('filtro') === 'bajo' ? 'active' : '' }}">
-            <i class="fas fa-triangle-exclamation"></i> Stock bajo
-        </a>
-    </div>
-    @if(Auth::user()->esAdmin())
-    <button class="btn-nuevo" onclick="document.getElementById('modalEntrada').classList.add('open')">
-        <i class="fas fa-truck-ramp-box"></i> Registrar entrada
-    </button>
+<form method="GET" action="{{ route('inventario.index') }}">
+    @if(request('filtro'))
+        <input type="hidden" name="filtro" value="{{ request('filtro') }}">
     @endif
-</div>
+    <div class="toolbar">
+        <div class="filters">
+            <a href="{{ route('inventario.index', array_filter(['q' => request('q'), 'categoria' => request('categoria')])) }}"
+               class="filter-btn {{ !request('filtro') ? 'active' : '' }}">
+                <i class="fas fa-list"></i> Todos
+            </a>
+            <a href="{{ route('inventario.index', array_filter(['filtro' => 'bajo', 'q' => request('q'), 'categoria' => request('categoria')])) }}"
+               class="filter-btn {{ request('filtro') === 'bajo' ? 'active' : '' }}">
+                <i class="fas fa-triangle-exclamation"></i> Stock bajo
+            </a>
+            <input type="text" name="q" class="filter-input" placeholder="Buscar producto..." value="{{ request('q') }}">
+            <select name="categoria" class="filter-input">
+                <option value="">Todas las categorías</option>
+                @foreach($categorias as $cat)
+                    <option value="{{ $cat->id }}" {{ request('categoria') == $cat->id ? 'selected' : '' }}>
+                        {{ $cat->nombre_categoria }}
+                    </option>
+                @endforeach
+            </select>
+            <button type="submit" class="btn-filtrar"><i class="fas fa-filter"></i> Filtrar</button>
+            @if(request()->hasAny(['q', 'categoria', 'filtro', 'producto_id']))
+                <a href="{{ route('inventario.index') }}" class="btn-filtrar" style="text-decoration:none;">
+                    <i class="fas fa-xmark"></i> Limpiar
+                </a>
+            @endif
+        </div>
+        @if(Auth::user()->esAdmin())
+        <button type="button" class="btn-nuevo" onclick="document.getElementById('modalEntrada').classList.add('open')">
+            <i class="fas fa-truck-ramp-box"></i> Registrar entrada
+        </button>
+        @endif
+    </div>
+</form>
 
 {{-- Grid: tabla + panel movimientos --}}
 <div class="inv-grid">
@@ -162,6 +195,7 @@
                     <tr>
                         <th>Producto</th>
                         <th>Categoría</th>
+                        <th>Precio venta</th>
                         <th>Stock</th>
                         <th>Mínimo</th>
                         <th>Estado</th>
@@ -189,6 +223,7 @@
                             </a>
                         </td>
                         <td style="color:#6B7280; font-size:.82rem;">{{ $prod->categoria?->nombre_categoria ?? '—' }}</td>
+                        <td style="font-weight:600; white-space:nowrap;">$ {{ number_format($prod->precio_venta, 0, ',', '.') }}</td>
                         <td>
                             <div class="stock-wrap">
                                 <div class="stock-bar-bg">
@@ -212,10 +247,12 @@
                     </tr>
                     @empty
                     <tr class="empty-row">
-                        <td colspan="6">
+                        <td colspan="7">
                             <i class="fas fa-warehouse"></i>
                             @if(request('filtro') === 'bajo')
-                                No hay productos con stock bajo.
+                                No hay productos con stock bajo que coincidan con los filtros.
+                            @elseif(request('q') || request('categoria'))
+                                No se encontraron productos con los filtros aplicados.
                             @else
                                 Aún no hay productos en inventario.
                             @endif
@@ -314,6 +351,13 @@
                 <input type="number" name="cantidad" class="form-input {{ $errors->has('cantidad') ? 'is-invalid' : '' }}"
                     value="{{ old('cantidad', 1) }}" min="1" placeholder="Ej: 10">
                 @error('cantidad') <div class="invalid-msg">{{ $message }}</div> @enderror
+            </div>
+
+            <div class="form-group">
+                <label class="form-label">Fecha de ingreso <span style="color:#EF4444">*</span></label>
+                <input type="date" name="fecha" class="form-input {{ $errors->has('fecha') ? 'is-invalid' : '' }}"
+                    value="{{ old('fecha', now()->toDateString()) }}" max="{{ now()->toDateString() }}">
+                @error('fecha') <div class="invalid-msg"><i class="fas fa-circle-exclamation"></i> {{ $message }}</div> @enderror
             </div>
 
             <div class="form-group">

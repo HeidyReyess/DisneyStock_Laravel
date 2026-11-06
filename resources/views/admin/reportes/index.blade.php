@@ -404,7 +404,9 @@
                         <th>Stock</th>
                         <th>Mínimo</th>
                         <th>Estado stock</th>
+                        @if(Auth::user()->esAdmin())
                         <th>Valor costo</th>
+                        @endif
                         <th>Valor venta</th>
                     </tr>
                 </thead>
@@ -429,20 +431,24 @@
                         </td>
                         <td style="color:#9CA3AF; font-size:.82rem;">{{ $minimo }}</td>
                         <td><span class="badge {{ $bajo ? 'badge-bajo' : 'badge-ok' }}">{{ $bajo ? 'Bajo' : 'Normal' }}</span></td>
+                        @if(Auth::user()->esAdmin())
                         <td>$ {{ number_format($stock * $prod->precio_compra, 0, ',', '.') }}</td>
+                        @endif
                         <td style="font-weight:600;">$ {{ number_format($stock * $prod->precio_venta, 0, ',', '.') }}</td>
                     </tr>
                     @empty
-                    <tr><td colspan="7" style="text-align:center; padding:32px; color:#9CA3AF;">Sin productos activos.</td></tr>
+                    <tr><td colspan="{{ Auth::user()->esAdmin() ? '7' : '6' }}" style="text-align:center; padding:32px; color:#9CA3AF;">Sin productos activos.</td></tr>
                     @endforelse
                 </tbody>
                 @if($datos->count() > 0)
                 <tfoot>
                     <tr style="background:#F5F3FF;">
                         <td colspan="5" style="padding:10px 14px; font-weight:700; color:#4A1D96; font-size:.84rem;">Total</td>
+                        @if(Auth::user()->esAdmin())
                         <td style="padding:10px 14px; font-weight:700;">
                             $ {{ number_format($datos->sum(fn($p) => ($p->inventario?->cantidad_stock ?? 0) * $p->precio_compra), 0, ',', '.') }}
                         </td>
+                        @endif
                         <td style="padding:10px 14px; font-weight:700;">
                             $ {{ number_format($datos->sum(fn($p) => ($p->inventario?->cantidad_stock ?? 0) * $p->precio_venta), 0, ',', '.') }}
                         </td>

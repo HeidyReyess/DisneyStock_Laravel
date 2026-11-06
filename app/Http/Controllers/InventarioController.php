@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Categoria;
 use App\Models\Inventario;
 use App\Models\MovimientoInventario;
 use App\Models\Producto;
@@ -24,6 +25,16 @@ class InventarioController extends Controller
                 $q->whereColumn('cantidad_stock', '<=', 'stock_minimo')
                   ->where('stock_minimo', '>', 0);
             });
+        }
+
+        // Buscador por nombre
+        if ($request->filled('q')) {
+            $query->where('nombre', 'like', '%' . $request->q . '%');
+        }
+
+        // Filtro por categoría
+        if ($request->filled('categoria')) {
+            $query->where('categoria_id', $request->categoria);
         }
 
         // Filtro por producto específico (para el panel de movimientos)
@@ -49,9 +60,10 @@ class InventarioController extends Controller
 
         $movimientos     = $movQuery->get();
         $productosSelect = Producto::with('inventario')->where('estado', 'activo')->orderBy('nombre')->get();
+        $categorias      = Categoria::orderBy('nombre_categoria')->get();
 
         return view('admin.inventario.index', compact(
-            'productos', 'totalBajo', 'movimientos', 'productosSelect'
+            'productos', 'totalBajo', 'movimientos', 'productosSelect', 'categorias'
         ));
     }
 
@@ -103,14 +115,18 @@ class InventarioController extends Controller
         $request->validate([
             'producto_id' => ['required', 'exists:productos,id'],
             'cantidad'    => ['required', 'integer', 'min:1'],
+            'fecha'       => ['required', 'date', 'before_or_equal:today'],
             'descripcion' => ['required', 'string', 'min:5', 'max:200'],
             'proveedor'   => ['nullable', 'string', 'max:100'],
         ], [
-            'producto_id.required' => 'Selecciona un producto.',
-            'cantidad.required'    => 'La cantidad es obligatoria.',
-            'cantidad.min'         => 'La cantidad debe ser al menos 1.',
-            'descripcion.required' => 'La descripción o motivo es obligatorio.',
-            'descripcion.min'      => 'La descripción debe tener al menos 5 caracteres.',
+            'producto_id.required'  => 'Selecciona un producto.',
+            'cantidad.required'     => 'La cantidad es obligatoria.',
+            'cantidad.min'          => 'La cantidad debe ser al menos 1.',
+            'fecha.required'        => 'La fecha de ingreso es obligatoria.',
+            'fecha.date'            => 'La fecha de ingreso debe ser una fecha válida.',
+            'fecha.before_or_equal' => 'La fecha de ingreso no puede ser futura.',
+            'descripcion.required'  => 'La descripción o motivo es obligatorio.',
+            'descripcion.min'       => 'La descripción debe tener al menos 5 caracteres.',
         ]);
 
         $producto = Producto::with('inventario')->findOrFail($request->producto_id);
@@ -129,7 +145,7 @@ class InventarioController extends Controller
             MovimientoInventario::create([
                 'tipo_movimiento' => 'entrada',
                 'cantidad'        => $request->cantidad,
-                'fecha'           => now()->toDateString(),
+                'fecha'           => $request->fecha,
                 'descripcion'     => $request->descripcion,
                 'proveedor'       => $request->proveedor,
                 'producto_id'     => $producto->id,

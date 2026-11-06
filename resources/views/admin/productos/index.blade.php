@@ -167,7 +167,9 @@
                     <th>Nombre</th>
                     <th>Categoría</th>
                     <th>Precio venta</th>
+                    @if(Auth::user()->esAdmin())
                     <th>Precio compra</th>
+                    @endif
                     <th>Stock</th>
                     <th>Estado</th>
                     <th>Acciones</th>
@@ -194,7 +196,9 @@
                     </td>
                     <td style="color:#6B7280;">{{ $prod->categoria?->nombre_categoria ?? '—' }}</td>
                     <td style="font-weight:600;">$ {{ number_format($prod->precio_venta, 0, ',', '.') }}</td>
+                    @if(Auth::user()->esAdmin())
                     <td>$ {{ number_format($prod->precio_compra, 0, ',', '.') }}</td>
+                    @endif
                     <td>
                         @php $stock = $prod->stockActual(); $bajo = $prod->stockBajo(); @endphp
                         <span class="badge {{ $bajo ? 'badge-bajo' : 'badge-ok' }}">
@@ -251,7 +255,7 @@
                 </tr>
                 @empty
                 <tr class="empty-row">
-                    <td colspan="8">
+                    <td colspan="{{ Auth::user()->esAdmin() ? '8' : '7' }}">
                         <i class="fas fa-box-open"></i>
                         Aún no hay productos registrados.
                     </td>

@@ -95,7 +95,7 @@
 <form method="GET" action="{{ route('usuarios.index') }}">
 <div class="toolbar">
     <div class="filters">
-        <input type="text" name="buscar" class="filter-input" placeholder="Buscar por nombre o usuario..." value="{{ request('buscar') }}">
+        <input type="text" name="buscar" class="filter-input" placeholder="Buscar usuario..." value="{{ request('buscar') }}">
         <select name="estado" class="filter-input" style="min-width:130px;">
             <option value="">Todos</option>
             <option value="activo"   {{ request('estado') === 'activo'   ? 'selected' : '' }}>Activos</option>
@@ -164,8 +164,8 @@
                             </button>
 
                             {{-- Restablecer contraseña --}}
-                            <button class="btn-accion btn-pass"
-                                onclick="abrirModalPass({{ $u->id }}, '{{ addslashes($u->usuario) }}')">
+                            <button class="btn-accion btn-pass" title="Restablecer contraseña"
+                                onclick="abrirModalPass({{ $u->id }}, '{{ addslashes($u->nombre) }}')">
                                 <i class="fas fa-key"></i>
                             </button>
 
@@ -173,16 +173,17 @@
                                 {{-- Toggle activo/inactivo --}}
                                 <form method="POST" action="{{ route('usuarios.toggle', $u) }}" style="display:inline;">
                                     @csrf @method('PATCH')
-                                    <button type="submit" class="btn-accion {{ $u->estado === 'activo' ? 'btn-toggle-on' : 'btn-toggle-off' }}">
+                                    <button type="submit" class="btn-accion {{ $u->estado === 'activo' ? 'btn-toggle-on' : 'btn-toggle-off' }}"
+                                        title="{{ $u->estado === 'activo' ? 'Desactivar' : 'Activar' }}">
                                         <i class="fas {{ $u->estado === 'activo' ? 'fa-toggle-on' : 'fa-toggle-off' }}"></i>
                                     </button>
                                 </form>
 
                                 {{-- Eliminar --}}
                                 <form method="POST" action="{{ route('usuarios.destroy', $u) }}" style="display:inline;"
-                                    onsubmit="confirmarEliminarUsuario(event, '{{ addslashes($u->usuario) }}'); return false;">
+                                    onsubmit="confirmarEliminarUsuario(event, '{{ addslashes($u->nombre) }}'); return false;">
                                     @csrf @method('DELETE')
-                                    <button type="submit" class="btn-accion btn-eliminar">
+                                    <button type="submit" class="btn-accion btn-eliminar" title="Eliminar">
                                         <i class="fas fa-trash"></i>
                                     </button>
                                 </form>

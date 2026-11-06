@@ -71,9 +71,12 @@ Route::middleware(['auth', 'role:administrador', 'activo', 'no-cache'])->group(f
     Route::patch('usuarios/{usuario}/reset-password', [UsuarioController::class, 'resetPassword'])
         ->name('usuarios.reset-password');
 
-    // Configuración — solo administrador
+    // Configuración y copias de seguridad — solo administrador
     Route::get('/configuracion',  [ConfiguracionController::class, 'index'])->name('configuracion.index');
     Route::post('/configuracion', [ConfiguracionController::class, 'update'])->name('configuracion.update');
+    Route::post('/configuracion/backups', [ConfiguracionController::class, 'generarBackup'])->name('configuracion.backups.generar');
+    Route::get('/configuracion/backups/{archivo}/descargar', [ConfiguracionController::class, 'descargarBackup'])->name('configuracion.backups.descargar');
+    Route::delete('/configuracion/backups/{archivo}', [ConfiguracionController::class, 'eliminarBackup'])->name('configuracion.backups.eliminar');
 
     // Exportación de reportes — solo administrador
     Route::get('/reportes/export/pdf',   [ReporteController::class, 'exportPdf'])->name('reportes.export.pdf');

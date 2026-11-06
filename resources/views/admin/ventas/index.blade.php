@@ -206,7 +206,7 @@
                             </button>
                             @if(!$venta->estaAnulada() && Auth::user()->esAdmin())
                             <form method="POST" action="{{ route('ventas.anular', $venta) }}"
-                                onsubmit="return confirm('¿Anular la venta {{ $venta->factura?->numero }}? Se restaurará el stock.')">
+                                onsubmit="confirmarAnularVenta(event, '{{ $venta->factura?->numero ?? ('DS-' . str_pad($venta->id, 6, '0', STR_PAD_LEFT)) }}'); return false;">
                                 @csrf @method('PATCH')
                                 <button type="submit" class="btn-accion btn-anular">
                                     <i class="fas fa-ban"></i> Anular
@@ -237,6 +237,15 @@
     <div class="modal-box lg">
         <button class="modal-close" onclick="cerrarModal('modalNuevaVenta')"><i class="fas fa-xmark"></i></button>
         <div class="modal-title"><i class="fas fa-cart-plus"></i> Nueva venta</div>
+
+        {{-- Mensaje de error de stock en modal con estilo del sistema --}}
+        <div id="errorStockVenta" class="alert-error" style="display:none; margin-bottom:14px; font-size:.84rem; padding:10px 14px; align-items:center; gap:8px;">
+            <i class="fas fa-circle-exclamation" style="flex-shrink:0;"></i>
+            <span id="errorStockVentaMsg" style="flex:1;"></span>
+            <button type="button" onclick="mostrarErrorStock('')" style="background:none; border:none; color:#991B1B; cursor:pointer; font-size:.9rem; padding:0 4px;">
+                <i class="fas fa-xmark"></i>
+            </button>
+        </div>
 
         {{-- Selector de producto --}}
         <div style="display:grid; grid-template-columns:1fr auto; gap:10px; margin-bottom:16px;">
@@ -313,12 +322,45 @@
     </div>
 </div>
 
+{{-- ════════════════════════════════════════
+     MODAL CONFIRMAR ANULAR VENTA
+════════════════════════════════════════ --}}
+<div class="modal-overlay" id="modalConfirmAnular">
+    <div class="modal-backdrop" onclick="cerrarModal('modalConfirmAnular')"></div>
+    <div class="modal-box sm">
+        <button class="modal-close" onclick="cerrarModal('modalConfirmAnular')"><i class="fas fa-xmark"></i></button>
+        <div class="modal-title" style="margin-bottom:12px; color:#DC2626;">
+            <i class="fas fa-triangle-exclamation" style="color:#DC2626;"></i> Anular venta
+        </div>
+        <p id="modalConfirmAnularMsg" style="font-size:.88rem; color:#374151; margin-bottom:22px; line-height:1.5;"></p>
+        <div class="modal-footer" style="margin-top:0;">
+            <button type="button" class="btn-cancelar" onclick="cerrarModal('modalConfirmAnular')">Cancelar</button>
+            <button id="modalConfirmAnularOk" type="button" class="btn-guardar" style="background:#DC2626; border-color:#DC2626;">
+                <i class="fas fa-ban"></i> Anular venta
+            </button>
+        </div>
+    </div>
+</div>
+
 <script>
     // ── Carrito ──────────────────────────────────────────────
     let carrito = [];
     const DESCUENTO_MAX_PCT = {{ $descuentoMaxPct }};
 
+    function mostrarErrorStock(msg) {
+        const div  = document.getElementById('errorStockVenta');
+        const span = document.getElementById('errorStockVentaMsg');
+        if (msg) {
+            span.textContent = msg;
+            div.style.display = 'flex';
+        } else {
+            div.style.display = 'none';
+            span.textContent = '';
+        }
+    }
+
     function agregarAlCarrito() {
+        mostrarErrorStock('');
         const sel   = document.getElementById('selectProducto');
         const opt   = sel.options[sel.selectedIndex];
         if (!opt.value) return;
@@ -332,12 +374,15 @@
         const existente = carrito.find(i => i.id === id);
         if (existente) {
             if (existente.cantidad >= stock) {
-                alert('No hay suficiente stock de ' + nombre);
+                mostrarErrorStock('No hay suficiente stock de "' + nombre + '" (disponibles: ' + stock + ').');
                 return;
             }
             existente.cantidad++;
         } else {
-            if (stock <= 0) { alert('Sin stock disponible para ' + nombre); return; }
+            if (stock <= 0) {
+                mostrarErrorStock('Sin stock disponible para "' + nombre + '".');
+                return;
+            }
             carrito.push({ id, nombre, precio, cantidad: 1, stock });
         }
         renderCarrito();
@@ -383,10 +428,16 @@
     }
 
     function cambiarCantidad(idx, val) {
+        mostrarErrorStock('');
         const cant = parseInt(val);
-        if (cant < 1) { carrito[idx].cantidad = 1; }
-        else if (cant > carrito[idx].stock) { carrito[idx].cantidad = carrito[idx].stock; }
-        else { carrito[idx].cantidad = cant; }
+        if (cant < 1) {
+            carrito[idx].cantidad = 1;
+        } else if (cant > carrito[idx].stock) {
+            carrito[idx].cantidad = carrito[idx].stock;
+            mostrarErrorStock('No hay suficiente stock de "' + carrito[idx].nombre + '" (máximo disponible: ' + carrito[idx].stock + ').');
+        } else {
+            carrito[idx].cantidad = cant;
+        }
         renderCarrito();
     }
 
@@ -452,7 +503,24 @@
     }
 
     // ── Modales ──────────────────────────────────────────────
-    function cerrarModal(id) { document.getElementById(id).classList.remove('open'); }
+    function cerrarModal(id) {
+        document.getElementById(id).classList.remove('open');
+        if (id === 'modalNuevaVenta') {
+            mostrarErrorStock('');
+        }
+    }
+
+    function confirmarAnularVenta(e, numFac) {
+        e.preventDefault();
+        const form = e.target.closest('form');
+        document.getElementById('modalConfirmAnularMsg').textContent =
+            `¿Seguro que deseas anular la venta ${numFac}? El stock se devolverá al inventario.`;
+        document.getElementById('modalConfirmAnularOk').onclick = function() {
+            cerrarModal('modalConfirmAnular');
+            form.submit();
+        };
+        document.getElementById('modalConfirmAnular').classList.add('open');
+    }
 
     function verDetalle(id) {
         document.getElementById('detalleContenido').innerHTML =
@@ -470,6 +538,7 @@
         if (e.key === 'Escape') {
             cerrarModal('modalNuevaVenta');
             cerrarModal('modalDetalle');
+            cerrarModal('modalConfirmAnular');
         }
     });
 

@@ -63,7 +63,7 @@ class UsuarioController extends Controller
         ]);
 
         return redirect()->route('usuarios.index')
-            ->with('success', "Usuario \"{$request->usuario}\" creado correctamente.");
+            ->with('success', "Usuario \"{$request->nombre}\" creado correctamente.");
     }
 
     // PUT /usuarios/{usuario}
@@ -87,7 +87,7 @@ class UsuarioController extends Controller
         ]);
 
         return redirect()->route('usuarios.index')
-            ->with('success', "Usuario \"{$usuario->usuario}\" actualizado correctamente.");
+            ->with('success', "Usuario \"{$usuario->nombre}\" actualizado correctamente.");
     }
 
     // PATCH /usuarios/{usuario}/reset-password
@@ -106,7 +106,7 @@ class UsuarioController extends Controller
         $usuario->update(['password' => Hash::make($request->password)]);
 
         return redirect()->route('usuarios.index')
-            ->with('success', "Contraseña de \"{$usuario->usuario}\" restablecida correctamente.");
+            ->with('success', "Contraseña de \"{$usuario->nombre}\" restablecida correctamente.");
     }
 
     // PATCH /usuarios/{usuario}/toggle
@@ -125,7 +125,7 @@ class UsuarioController extends Controller
         $estado = $usuario->estado === 'activo' ? 'activado' : 'desactivado';
 
         return redirect()->route('usuarios.index')
-            ->with('success', "Usuario \"{$usuario->usuario}\" {$estado}.");
+            ->with('success', "Usuario \"{$usuario->nombre}\" {$estado}.");
     }
 
     // DELETE /usuarios/{usuario}
@@ -147,7 +147,7 @@ class UsuarioController extends Controller
                     '. Desactívalo en su lugar.');
         }
 
-        $nombre = $usuario->usuario;
+        $nombre = $usuario->nombre;
         $usuario->delete();
 
         return redirect()->route('usuarios.index')
